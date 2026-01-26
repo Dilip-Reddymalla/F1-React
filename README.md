@@ -1,16 +1,92 @@
-# React + Vite
+# F1 React
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern Formula 1 statistics and racing information web application built with React and Vite. This project showcases current driver standings, team standings, race information, and historical data in an interactive UI.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Driver Standings**: View current driver rankings and statistics
+- **Team/Constructor Standings**: Track constructor championship positions
+- **Race Information**: Browse race details, track information, and results
+- **Driver Details**: Comprehensive driver profiles with career information
+- **Team Information**: Constructor team data and images
+- **Race Animation**: Visual representation of race data
+- **Responsive Design**: Mobile-friendly interface
 
-## React Compiler
+## Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Frontend**: React 19.2+ with React Router 7.12+
+- **Build Tool**: Vite 7.2+
+- **Styling**: CSS3
+- **Linting**: ESLint 9.39+
+- **Package Manager**: npm
 
-## Expanding the ESLint configuration
+## Getting Started
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Prerequisites
+
+- Node.js (14+ recommended)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone <repository-url>
+cd F1-React
+```
+
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Start the development server:
+
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173` (or the port shown in your terminal).
+
+## Available Scripts
+
+- `npm run dev` - Start the development server with HMR
+- `npm run build` - Build the project for production
+- `npm run preview` - Preview the production build locally
+- `npm run lint` - Run ESLint to check code quality
+
+## Project Structure
+
+```
+src/
+├── components/           # Reusable components
+│   ├── races/           # Race-related components
+│   ├── standings/       # Standings display components
+│   ├── header.jsx       # Header component
+│   └── ...
+├── pages/               # Page components (Router pages)
+│   ├── drivers.jsx
+│   ├── teams.jsx
+│   ├── races.jsx
+│   ├── standings.jsx
+│   └── home.jsx
+├── assets/              # Static assets
+├── App.jsx              # Main app component
+└── main.jsx             # Entry point
+```
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a pull request.
+
+## License
+
+This project is open source and available under the MIT License.
+
+## Notes
+
+- This project uses Vite for fast development and optimized production builds
+- ESLint is configured for code quality and consistency
+- Components are organized by feature for easy navigation and maintenance
