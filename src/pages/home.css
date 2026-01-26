@@ -1,0 +1,132 @@
+section {
+  min-height: 100vh;
+  padding: 4rem 3.5rem;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Intro Section */
+
+.intro h1 {
+  font-size: clamp(2.2rem, 4vw, 3rem);
+  margin-bottom: 1rem;
+  font-weight: 800;
+}
+
+.intro p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  max-width: 700px;
+}
+
+.intro img {
+  width: 100%;
+  max-width: 900px;
+  margin-top: 2.5rem;
+  border-radius: 6px;
+}
+
+/* Championship Sections */
+.constructorChamp,
+.driversChamp {
+  max-width: 100%;
+}
+
+.constructorChamp h2,
+.driversChamp h2 {
+  font-size: 1.9rem;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.constructorChamp p,
+.driversChamp p {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  max-width: 720px;
+}
+
+.constructorChamp img,
+.driversChamp img {
+  width: 100%;
+  max-width: 900px;
+  margin-top: 2rem;
+  border-radius: 6px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0.75rem 1.5rem;
+  }
+
+  section {
+    padding: 2.5rem 1.5rem;
+    min-height: auto;
+  }
+
+  .intro h1 {
+    font-size: 1.8rem;
+  }
+
+  .intro p {
+    font-size: 1rem;
+  }
+
+  .intro img {
+    max-width: 100%;
+  }
+
+  .constructorChamp h2,
+  .driversChamp h2 {
+    font-size: 1.4rem;
+  }
+
+  .constructorChamp p,
+  .driversChamp p {
+    font-size: 0.95rem;
+  }
+
+  .constructorChamp img,
+  .driversChamp img {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  section {
+    padding: 1.5rem 1rem;
+  }
+
+  .intro h1 {
+    font-size: 1.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .intro p {
+    font-size: 0.9rem;
+  }
+
+  .intro img {
+    margin-top: 1.5rem;
+  }
+
+  .constructorChamp h2,
+  .driversChamp h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .constructorChamp p,
+  .driversChamp p {
+    font-size: 0.85rem;
+  }
+
+  .constructorChamp img,
+  .driversChamp img {
+    margin-top: 1rem;
+  }
+}

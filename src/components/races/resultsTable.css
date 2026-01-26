@@ -1,0 +1,232 @@
+.results-table-container {
+  overflow-x: auto;
+  margin-top: 2rem;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.results-table th,
+.results-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.results-table th {
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.results-table tr:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* ... existing styles ... */
+
+.select-cell {
+  width: 60px;
+  text-align: center !important;
+}
+
+/* Custom Checkbox Container */
+.custom-checkbox {
+  display: block;
+  position: relative;
+  padding-left: 25px; /* Space for box */
+  cursor: pointer;
+  font-size: 22px;
+  user-select: none;
+  height: 20px;
+  width: 20px;
+  margin: 0 auto;
+}
+
+/* Hide default browser checkbox */
+.custom-checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkmark */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #333;
+  border: 1px solid #555;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+/* On mouse-over, add a grey background color */
+.custom-checkbox:hover input ~ .checkmark {
+  background-color: #444;
+}
+
+/* When the checkbox is checked, add a red background */
+.custom-checkbox input:checked ~ .checkmark {
+  background-color: #e10600; /* F1 Red */
+  border-color: #e10600;
+}
+
+/* Disabled state */
+.custom-checkbox input:disabled ~ .checkmark {
+  background-color: #222;
+  border-color: #333;
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Show the checkmark when checked */
+.custom-checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+/* Style the checkmark used */
+.custom-checkbox .checkmark:after {
+  left: 7px;
+  top: 3px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+.clickable-row {
+  /* ... existing ... */
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.clickable-row:hover {
+  background-color: rgba(225, 6, 0, 0.1); /* Subtle F1 red tint */
+}
+
+.pos-cell {
+  font-weight: bold;
+}
+
+.driver-cell strong {
+  margin-left: 4px;
+}
+
+.points-cell {
+  font-weight: bold;
+  color: #e10600;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .results-table-container {
+    margin-top: 1.5rem;
+    padding: 0.75rem;
+  }
+
+  .results-table {
+    font-size: 0.8rem;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 0.75rem;
+  }
+
+  .results-table th {
+    font-size: 0.75rem;
+  }
+
+  .select-cell {
+    width: 50px;
+  }
+
+  .custom-checkbox {
+    padding-left: 20px;
+    font-size: 18px;
+    height: 16px;
+    width: 16px;
+  }
+
+  .checkmark {
+    height: 16px;
+    width: 16px;
+  }
+
+  .custom-checkbox .checkmark:after {
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .results-table-container {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+
+  .results-table {
+    font-size: 0.7rem;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 0.5rem;
+  }
+
+  .results-table th {
+    font-size: 0.65rem;
+  }
+
+  .select-cell {
+    width: 40px;
+  }
+
+  .custom-checkbox {
+    padding-left: 18px;
+    font-size: 16px;
+    height: 14px;
+    width: 14px;
+  }
+
+  .checkmark {
+    height: 14px;
+    width: 14px;
+  }
+
+  .custom-checkbox:hover input ~ .checkmark {
+    background-color: #333;
+  }
+
+  .custom-checkbox .checkmark:after {
+    left: 4px;
+    top: 1px;
+    width: 3px;
+    height: 7px;
+  }
+}

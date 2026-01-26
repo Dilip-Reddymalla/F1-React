@@ -1,0 +1,214 @@
+.podium-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 2rem 0;
+  height: 400px;
+}
+
+.podium-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 1rem;
+  width: 150px;
+  border-radius: 8px 8px 0 0;
+  color: white;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+  position: relative;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    filter 0.2s ease;
+}
+
+.podium-step:hover {
+  transform: translateY(-8px);
+  filter: brightness(1.2);
+}
+
+/* ... existing code ... */
+
+/* Image Styles */
+.podium-step .driver-photo,
+.podium-step .team-logo-container {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.8);
+  background-color: #333;
+  margin-bottom: auto;
+  margin-top: -40px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.podium-step .team-logo-container {
+  background-color: white;
+  padding: 5px;
+}
+
+.podium-step .team-logo-container img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.podium-step .driver-photo {
+  object-fit: cover;
+  object-position: top;
+}
+
+.podium-step.p1 .driver-photo,
+.podium-step.p1 .team-logo-container {
+  width: 100px;
+  height: 100px;
+  margin-top: -50px;
+  border-color: #fff;
+}
+
+/* Text Styles */
+.podium-step .position {
+  font-size: 3rem;
+  font-weight: 900;
+  margin-bottom: 0.5rem;
+  padding-top: 1rem;
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.podium-step .driver-name,
+.podium-step .team-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  padding: 0 0.5rem;
+  word-wrap: break-word;
+}
+
+.podium-step .detail-text {
+  font-size: 0.8rem;
+  opacity: 0.9;
+  padding: 0 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.podium-step .points-badge {
+  background: rgba(0, 0, 0, 0.6);
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  margin-top: 0.5rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .podium-container {
+    height: 300px;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+  }
+
+  .podium-step {
+    width: 120px;
+    padding-bottom: 0.75rem;
+  }
+
+  .podium-step .driver-photo,
+  .podium-step .team-logo-container {
+    width: 65px;
+    height: 65px;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    margin-top: -32px;
+  }
+
+  .podium-step.p1 .driver-photo,
+  .podium-step.p1 .team-logo-container {
+    width: 75px;
+    height: 75px;
+    margin-top: -37px;
+  }
+
+  .podium-step .position {
+    font-size: 2rem;
+    margin-bottom: 0.25rem;
+    padding-top: 0.5rem;
+  }
+
+  .podium-step .driver-name,
+  .podium-step .team-name {
+    font-size: 0.9rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .podium-step .detail-text {
+    font-size: 0.7rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .podium-step .points-badge {
+    padding: 0.15rem 0.4rem;
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .podium-container {
+    height: 250px;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  .podium-step {
+    width: 100px;
+    padding-bottom: 0.5rem;
+  }
+
+  .podium-step .driver-photo,
+  .podium-step .team-logo-container {
+    width: 50px;
+    height: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+    margin-top: -25px;
+  }
+
+  .podium-step.p1 .driver-photo,
+  .podium-step.p1 .team-logo-container {
+    width: 60px;
+    height: 60px;
+    margin-top: -30px;
+  }
+
+  .podium-step .position {
+    font-size: 1.5rem;
+    margin-bottom: 0.1rem;
+    padding-top: 0.25rem;
+  }
+
+  .podium-step .driver-name,
+  .podium-step .team-name {
+    font-size: 0.75rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .podium-step .detail-text {
+    font-size: 0.6rem;
+    margin-bottom: 0.05rem;
+  }
+
+  .podium-step .points-badge {
+    padding: 0.1rem 0.3rem;
+    font-size: 0.65rem;
+    margin-top: 0.1rem;
+  }
+}

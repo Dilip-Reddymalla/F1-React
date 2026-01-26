@@ -1,0 +1,232 @@
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #222;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.close-button:hover {
+  color: white;
+}
+
+.modal-body {
+  padding: 2rem;
+}
+
+.details-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.details-image {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 50%;
+  border: 4px solid #333;
+  margin-bottom: 1rem;
+  background-color: #f0f0f0;
+}
+
+.details-image.team-logo {
+  object-fit: contain;
+  padding: 10px;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+.details-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: inherit; /* Inherit from parent for flexibility */
+}
+
+.details-image.team-logo img {
+  object-fit: contain;
+}
+
+.driver-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-item label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: #999;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: white;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .modal-content {
+    width: 95%;
+    max-width: 450px;
+    border-radius: 8px;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 1.2rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .close-button {
+    font-size: 1.5rem;
+  }
+
+  .modal-body {
+    padding: 1.5rem;
+  }
+
+  .details-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .details-image {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 0.75rem;
+  }
+
+  .driver-info-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .info-item label {
+    font-size: 0.75rem;
+  }
+
+  .info-item span {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-backdrop {
+    padding: 1rem;
+  }
+
+  .modal-content {
+    width: 100%;
+    max-width: none;
+    border-radius: 8px;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .close-button {
+    font-size: 1.2rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .details-header {
+    margin-bottom: 1rem;
+  }
+
+  .details-image {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 0.5rem;
+  }
+
+  .driver-info-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .info-item label {
+    font-size: 0.7rem;
+  }
+
+  .info-item span {
+    font-size: 0.9rem;
+  }
+}
