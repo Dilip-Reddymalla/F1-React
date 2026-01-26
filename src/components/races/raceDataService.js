@@ -6,7 +6,6 @@ export async function getRaceData(year, round, driverIds, finalResults) {
     if (!year || !round || !driverIds) return null;
 
     try {
-        console.log("Fetching lap data...");
         // Fetch up to 2000 laps (coverage for most races)
         const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/${round}/laps.json?limit=2000`);
         const data = await response.json();

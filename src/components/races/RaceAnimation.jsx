@@ -73,15 +73,15 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
         lapProgressRef.current += increment;
         
         // Debug logging (remove after testing)
-        if (Math.floor(lapProgressRef.current) !== Math.floor(lapProgressRef.current - increment)) {
-            console.log(`Lap ${Math.floor(lapProgressRef.current)}/${totalLaps}`);
-        }
+        // if (Math.floor(lapProgressRef.current) !== Math.floor(lapProgressRef.current - increment)) {
+        //     console.log(`Lap ${Math.floor(lapProgressRef.current)}/${totalLaps}`);
+        // }
+    
         
         // Stop at 105% to show victory lap past finish line
         if (lapProgressRef.current >= totalLaps * 1.05) {
             lapProgressRef.current = totalLaps * 1.05;
             setIsPlaying(false);
-            console.log("Race complete!");
             return; // Stop the loop
         }
 
@@ -128,9 +128,9 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
         const baseRaceProgress = Math.min(progressFloat / totalL, 1.05);
         
         // Debug: Log progress every 5 laps
-        if (currentLapIndex % 5 === 0 && lapInternalFraction < 0.1) {
-            console.log(`Lap ${currentLapIndex}: baseRaceProgress = ${(baseRaceProgress * 100).toFixed(1)}% of track`);
-        }
+        // if (currentLapIndex % 5 === 0 && lapInternalFraction < 0.1) {
+        //     console.log(`Lap ${currentLapIndex}: baseRaceProgress = ${(baseRaceProgress * 100).toFixed(1)}% of track`);
+        // }
         
         // CRITICAL FIX: Sort drivers by position to get RELATIVE rank (1, 2, 3...)
         // instead of using absolute race position (which could be 1, 20)
@@ -187,10 +187,10 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
         }).filter(Boolean);
 
         // Debug: Log EVERY update for the first few laps
-        if (currentLapIndex < 3) {
-            console.log(`Frame: Lap ${progressFloat.toFixed(2)}, Progress=${(baseRaceProgress*100).toFixed(1)}%`, 
-                newMarkers.map(m => `${m.info.code}:(${m.x.toFixed(0)},${m.y.toFixed(0)})`).join(' '));
-        }
+        // if (currentLapIndex < 3) {
+        //     console.log(`Frame: Lap ${progressFloat.toFixed(2)}, Progress=${(baseRaceProgress*100).toFixed(1)}%`, 
+        //         newMarkers.map(m => `${m.info.code}:(${m.x.toFixed(0)},${m.y.toFixed(0)})`).join(' '));
+        // }
 
         setMarkers(newMarkers);
       } catch (err) {
