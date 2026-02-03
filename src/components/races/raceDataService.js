@@ -1,182 +1,144 @@
-
 // Helper to pause for simulation effects
-const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export async function getRaceData(year, round, driverIds, finalResults) {
-    if (!year || !round || !driverIds) return null;
+export async function getRaceData(year, round, driverIds) {
+  if (!year || !round || !driverIds) return null;
 
-    try {
-        // Fetch up to 2000 laps (coverage for most races)
-        const response = await fetch(`https://api.jolpi.ca/ergast/f1/${year}/${round}/laps.json?limit=2000`);
+  try {
+    // Fetch lap data for each driver individually
+    const allLapsData = {};
+    let circuitName = "Unknown Circuit";
+
+    for (const driverId of driverIds) {
+      try {
+        const response = await fetch(
+          `https://api.jolpi.ca/ergast/f1/${year}/${round}/drivers/${driverId}/laps.json?limit=2000`,
+        );
         const data = await response.json();
+        console.log(data);
         const raceInfo = data.MRData.RaceTable.Races[0];
-        const lapsData = raceInfo?.Laps;
-        
-        // Extract circuit name for track rendering
-        const circuitName = raceInfo?.Circuit?.circuitName || "Unknown Circuit";
-        console.log("🏁 Circuit detected:", circuitName); // DEBUG
 
-        // Determine total laps from the winner's result
-        const winner = finalResults.find(r => r.position === "1");
-        const totalRaceLaps = winner ? parseInt(winner.laps) : 50; // Fallback if missing
-
-        if (lapsData && lapsData.length > 0) {
-            console.log(`Found real lap data (${lapsData.length} laps). Total race laps: ${totalRaceLaps}`);
-            
-            const realTimeline = processRealLaps(lapsData, driverIds);
-            
-            if (realTimeline.length === 0) {
-                 console.warn("Real data found but no matching driver times. Using simulation.");
-                 return generateSimulatedLaps(driverIds, finalResults, totalRaceLaps, circuitName);
-            }
-
-            const lastRealLap = realTimeline[realTimeline.length - 1].lap;
-
-            if (lastRealLap < totalRaceLaps) {
-                console.warn(`Partial Data Detected: Real data ends at lap ${lastRealLap}, Race is ${totalRaceLaps} laps. Extending with simulation...`);
-                return extendWithSimulation(realTimeline, totalRaceLaps, driverIds, finalResults, circuitName);
-            }
-
-            return {
-                type: 'REAL',
-                totalLaps: lastRealLap,
-                lapData: realTimeline,
-                circuitName: circuitName
-            };
-        } else {
-            console.warn("No lap data found. Generating full simulation...");
-            return generateSimulatedLaps(driverIds, finalResults, totalRaceLaps, circuitName);
+        // Extract circuit name from first successful response
+        if (!circuitName || circuitName === "Unknown Circuit") {
+          circuitName = raceInfo?.Circuit?.circuitName || "Unknown Circuit";
         }
 
-    } catch (err) {
-        console.error("Error fetching lap data, falling back to full simulation:", err);
-        return generateSimulatedLaps(driverIds, finalResults, 50, "Unknown Circuit");
-    }
-}
-
-function processRealLaps(lapsData, driverIds) {
-    const processed = [];
-
-    lapsData.forEach(lap => {
-        const timings = lap.Timings.filter(t => driverIds.includes(t.driverId));
-        
-        if (timings.length > 0) {
-            const lapNumber = parseInt(lap.number);
-            const positions = timings.map(t => ({
-                driverId: t.driverId,
-                position: parseInt(t.position)
-            }));
-
-            processed.push({
-                lap: lapNumber,
-                positions: positions
-            });
+        const lapsData = raceInfo?.Laps || [];
+        if (lapsData.length > 0) {
+          allLapsData[driverId] = lapsData;
         }
-    });
-    
-    // Sort by lap number just in case
-    return processed.sort((a, b) => a.lap - b.lap);
-}
-
-function extendWithSimulation(realTimeline, totalLaps, driverIds, finalResults, circuitName) {
-    const lastRealData = realTimeline[realTimeline.length - 1];
-    const startLap = lastRealData.lap + 1;
-    const missingLaps = totalLaps - lastRealData.lap;
-    
-    const simulatedPart = [];
-
-    // Get starting positions for simulation (from last real lap)
-    // If a driver wasn't in the last real lap (e.g. out), use their last known or bottom
-    const simDrivers = driverIds.map(id => {
-        const inLastLap = lastRealData.positions.find(p => p.driverId === id);
-        const finalRes = finalResults.find(r => r.Driver.driverId === id);
-        return {
-            id: id,
-            startPos: inLastLap ? inLastLap.position : parseInt(finalRes.grid || 20), // Fallback
-            endPos: parseInt(finalRes.positionText === "R" || !finalRes.position ? 20 : finalRes.position) // Handle DNFs roughly
-        };
-    });
-
-    // Interpolate
-    for (let i = 0; i < missingLaps; i++) {
-        const currentLap = startLap + i;
-        const progress = (i + 1) / missingLaps;
-
-        const currentPositions = simDrivers.map(d => {
-            // Linear iterpolation from LastReal -> Final
-            const exactPos = d.startPos + (d.endPos - d.startPos) * progress;
-            // Less noise since we want to converge smoothly
-            const noise = (Math.random() - 0.5) * 2; 
-            let simulatedPos = Math.round(exactPos + (progress < 0.9 ? noise : 0));
-            if (simulatedPos < 1) simulatedPos = 1;
-            if (simulatedPos > 22) simulatedPos = 22;
-
-            return {
-                driverId: d.id,
-                position: simulatedPos
-            };
-        });
-
-        simulatedPart.push({
-            lap: currentLap,
-            positions: currentPositions
-        });
+      } catch (err) {
+        console.warn(`Error fetching lap data for driver ${driverId}:`, err);
+      }
     }
 
-    return {
-        type: 'HYBRID (Real + Sim)',
-        totalLaps: totalLaps,
-        lapData: [...realTimeline, ...simulatedPart],
-        circuitName: circuitName
-    };
-}
-
-function generateSimulatedLaps(driverIds, finalResults, totalLaps = 50, circuitName = "Unknown Circuit") {
-    // ... (This function remains mostly same, just ensuring args match)
-    
-    const drivers = driverIds.map(id => {
-        const result = finalResults.find(r => r.Driver.driverId === id);
-        let endP = parseInt(result.position);
-        if (isNaN(endP)) endP = 20; // Handle non-finishes
-
-        return {
-            id: id,
-            startPos: parseInt(result.grid) || 20,
-            endPos: endP
-        };
-    });
-
-    const lapData = [];
-
-    for (let i = 0; i <= totalLaps; i++) {
-        const progress = i / totalLaps;
-        
-        const currentPositions = drivers.map(d => {
-            const exactPos = d.startPos + (d.endPos - d.startPos) * progress;
-            let simulatedPos;
-            
-            if (i < 5 || i > (totalLaps - 5)) {
-                simulatedPos = Math.round(exactPos);
-            } else {
-                const noise = (Math.random() - 0.5) * 5; 
-                simulatedPos = Math.round(exactPos + noise);
-            }
-            if (simulatedPos < 1) simulatedPos = 1;
-            if (simulatedPos > 22) simulatedPos = 22;
-            
-            return { driverId: d.id, position: simulatedPos };
-        });
-
-        lapData.push({
-            lap: i,
-            positions: currentPositions
-        });
+    if (Object.keys(allLapsData).length === 0) {
+      console.error("No lap data found for any driver");
+      return null;
     }
 
+    console.log("🏁 Circuit detected:", circuitName);
+    console.log(
+      `Found lap data for ${Object.keys(allLapsData).length} drivers`,
+    );
+
+    // Process and combine lap data
+    const { lapData, driverTotalTimes } =
+      processRealLapsIndividual(allLapsData);
+
+    if (lapData.length === 0) {
+      console.error("Failed to process lap data");
+      return null;
+    }
+
+    // Convert total times to HH:MM:SS format
+    const formattedTotalTimes = {};
+    Object.entries(driverTotalTimes).forEach(([driverId, totalSeconds]) => {
+      formattedTotalTimes[driverId] = convertSecondsToTime(totalSeconds);
+    });
+
+    console.log(lapData);
+    console.log(formattedTotalTimes);
+    const totalRaceLaps = lapData[lapData.length - 1].lap;
+
     return {
-        type: 'SIMULATION',
-        totalLaps: totalLaps,
-        lapData: lapData,
-        circuitName: circuitName
+      type: "REAL",
+      totalLaps: totalRaceLaps,
+      lapData: {
+        laps: lapData,
+        driverTotalTimes: formattedTotalTimes,
+      },
+      circuitName: circuitName,
     };
+  } catch (err) {
+    console.error("Error fetching lap data:", err);
+    return null;
+  }
+}
+
+function processRealLapsIndividual(allLapsData) {
+  // Create a map to track lap data for each driver
+  const lapMap = new Map();
+  const driverTotalTimes = {}; // Track total time for each driver
+
+  // Process each driver's lap data
+  Object.entries(allLapsData).forEach(([driverId, lapsData]) => {
+    driverTotalTimes[driverId] = 0;
+
+    lapsData.forEach((lap) => {
+      const lapNumber = parseInt(lap.number);
+
+      if (!lapMap.has(lapNumber)) {
+        lapMap.set(lapNumber, {
+          lap: lapNumber,
+          positions: [],
+          lapTimes: {},
+        });
+      }
+      // Each driver should have one timing entry per lap
+      if (lap.Timings && lap.Timings.length > 0) {
+        const timing = lap.Timings[0];
+        const lapTime = timing.time; // Get lap time from API
+
+        lapMap.get(lapNumber).positions.push({
+          driverId: driverId,
+          position: parseInt(timing.position),
+        });
+
+        // Store lap time for this driver and lap
+        lapMap.get(lapNumber).lapTimes[driverId] = lapTime;
+
+        // Add to total time if lap time exists
+        if (lapTime) {
+          driverTotalTimes[driverId] += convertTimeToSeconds(lapTime);
+        }
+      }
+    });
+  });
+
+  // Convert map to array and sort by lap number
+  const processed = Array.from(lapMap.values()).sort((a, b) => a.lap - b.lap);
+
+  return {
+    lapData: processed,
+    driverTotalTimes: driverTotalTimes,
+  };
+}
+
+// Helper function to convert time string (MM:SS.mmm) to seconds
+function convertTimeToSeconds(timeString) {
+  if (!timeString) return 0;
+  const parts = timeString.split(":");
+  const minutes = parseInt(parts[0]) || 0;
+  const seconds = parseFloat(parts[1]) || 0;
+  return minutes * 60 + seconds;
+}
+
+// Helper function to convert seconds to HH:MM:SS format
+function convertSecondsToTime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = (seconds % 60).toFixed(0);
+
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 }
