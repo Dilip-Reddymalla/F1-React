@@ -9,10 +9,31 @@ export function Driver({ year, setYear }) {
   const [drivers, setDrivers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [teamData, setTeamData] = useState({});
 
   const [fetchTrigger, setFetchTrigger] = useState(0);
 
+  // Fetch teams for all drivers
+  async function fetchDriverTeams(driversArray) {
+    const teams = {};
+    for (const driver of driversArray) {
+      try {
+        const teamUrl = `https://api.jolpi.ca/ergast/f1/${year}/drivers/${driver.driverId}/constructors.json`;
+        const res = await fetch(teamUrl);
+        const result = await res.json();
+        teams[driver.driverId] = result.MRData.ConstructorTable.Constructors[0]?.name ?? "N/A";
+      } catch (err) {
+        console.error(`Failed to fetch team for ${driver.driverId}:`, err);
+        teams[driver.driverId] = "N/A";
+      }
+    }
+    console.log(teams);
+    
+    setTeamData(teams);
+  }
+
   useEffect(() => {
+    setYear(2026);
     if (fetchTrigger === 0) return;
 
     async function fetchDrivers() {
@@ -26,6 +47,7 @@ export function Driver({ year, setYear }) {
         const driversData = result.MRData.DriverTable.Drivers;
 
         setDrivers(driversData);
+        await fetchDriverTeams(driversData);
       } catch (err) {
         setError("Failed to load drivers", err);
       } finally {
@@ -34,7 +56,7 @@ export function Driver({ year, setYear }) {
     }
 
     fetchDrivers();
-  }, [fetchTrigger]);
+  }, [fetchTrigger, year]);
 
   function handleButtonClick() {
     setFetchTrigger((prev) => prev + 1);
@@ -69,6 +91,9 @@ export function Driver({ year, setYear }) {
                 url={driver.url}
               />
               <ul className="driver-data">
+                <li>
+                  <strong>Team:</strong> {teamData[driver.driverId] ?? "N/A"}
+                </li>
                 <li>
                   <strong>Code:</strong> {driver.code ?? "N/A"}
                 </li>
