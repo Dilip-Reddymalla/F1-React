@@ -13,7 +13,6 @@ export function DriverMarker({ driver, x, y, position, lap, color }) {
         {driver.code || driver.familyName.substring(0,3).toUpperCase()}
       </text>
       
-      {/* Simple title for native hover, customized tooltip would be phase 7 */}
       <title>{`${driver.givenName} ${driver.familyName} - P${position} (Lap ${lap})`}</title>
     </g>
   );

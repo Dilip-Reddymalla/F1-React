@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { TrackSvg } from "./TrackSvg";
 import { DriverMarker } from "./DriverMarker";
 import "./raceAnimation.css";
@@ -18,12 +18,10 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [displaySpeed, setDisplaySpeed] = useState(1); // UI State
   const [markers, setMarkers] = useState([]);
-  const [trackViewBox, setTrackViewBox] = useState("0 0 900 600");
 
   
   const pathRef = useRef(null);
   const requestRef = useRef();
-  const startTimeRef = useRef(null);
   const lapProgressRef = useRef(0);
   
   // Refs for mutable values accessed in loop
@@ -58,52 +56,8 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
     }
   }, [allResults, timeline]);
 
-  // Main Animation Loop
-  // Defined as ref to be stable but access latest refs
-  const tickRef = useRef();
-  
-  tickRef.current = () => {
-     // CRITICAL: Use ref instead of state to avoid stale closure
-     if (isPlayingRef.current) {
-        // Slower speed for better viewing
-        // 0.05 laps per frame @ 60fps = 3 laps per second
-        // A 78 lap race completes in ~26 seconds
-        const increment = 0.05 * speedRef.current;
-        
-        lapProgressRef.current += increment;
-        
-        // Debug logging (remove after testing)
-        // if (Math.floor(lapProgressRef.current) !== Math.floor(lapProgressRef.current - increment)) {
-        //     console.log(`Lap ${Math.floor(lapProgressRef.current)}/${totalLaps}`);
-        // }
-    
-        
-        // Stop at 105% to show victory lap past finish line
-        if (lapProgressRef.current >= totalLaps * 1.05) {
-            lapProgressRef.current = totalLaps * 1.05;
-            setIsPlaying(false);
-            return; // Stop the loop
-        }
-
-        // CRITICAL: Update currentLap EVERY frame to force React re-render
-        setCurrentLap(Math.min(Math.floor(lapProgressRef.current), totalLaps));
-        updateMarkerPositions(lapProgressRef.current);
-        
-        // Always request next frame
-        requestRef.current = requestAnimationFrame(tickRef.current);
-     }
-  };
-
-  useEffect(() => {
-    if (isPlaying) {
-        requestRef.current = requestAnimationFrame(tickRef.current);
-    } else {
-        cancelAnimationFrame(requestRef.current);
-    }
-    return () => cancelAnimationFrame(requestRef.current);
-  }, [isPlaying]);
-
-  function updateMarkerPositions(progressFloat) {
+  // Update marker positions based on race progress
+  const updateMarkerPositions = useCallback((progressFloat) => {
       if (!pathRef.current || !timelineRef.current) return;
 
       try {
@@ -196,7 +150,54 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
       } catch (err) {
           console.error("Animation Loop Error:", err);
       }
-  }
+  }, []);
+
+  // Main Animation Loop
+  // Defined as ref to be stable but access latest refs
+  const tickRef = useRef();
+
+  useEffect(() => {
+    tickRef.current = () => {
+       // CRITICAL: Use ref instead of state to avoid stale closure
+       if (isPlayingRef.current) {
+          // Slower speed for better viewing
+          // 0.05 laps per frame @ 60fps = 3 laps per second
+          // A 78 lap race completes in ~26 seconds
+          const increment = 0.05 * speedRef.current;
+          
+          lapProgressRef.current += increment;
+          
+          // Debug logging (remove after testing)
+          // if (Math.floor(lapProgressRef.current) !== Math.floor(lapProgressRef.current - increment)) {
+          //     console.log(`Lap ${Math.floor(lapProgressRef.current)}/${totalLaps}`);
+          // }
+      
+          
+          // Stop at 105% to show victory lap past finish line
+          if (lapProgressRef.current >= totalLaps * 1.05) {
+              lapProgressRef.current = totalLaps * 1.05;
+              setIsPlaying(false);
+              return; // Stop the loop
+          }
+
+          // CRITICAL: Update currentLap EVERY frame to force React re-render
+          setCurrentLap(Math.min(Math.floor(lapProgressRef.current), totalLaps));
+          updateMarkerPositions(lapProgressRef.current);
+          
+          // Always request next frame
+          requestRef.current = requestAnimationFrame(tickRef.current);
+       }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isPlaying) {
+        requestRef.current = requestAnimationFrame(tickRef.current);
+    } else {
+        cancelAnimationFrame(requestRef.current);
+    }
+    return () => cancelAnimationFrame(requestRef.current);
+  }, [isPlaying]);
 
   const handleScrub = (e) => {
       const val = parseFloat(e.target.value);
@@ -210,7 +211,6 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
         <TrackSvg 
             ref={pathRef}    
             circuitName={timeline.circuitName}
-            onViewBox={setTrackViewBox}
             />
         
         {/* Render Markers */}
@@ -242,7 +242,7 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
                 min="0" 
                 max={totalLaps} 
                 step="0.1"
-                value={lapProgressRef.current}
+                value={currentLap}
                 onChange={handleScrub}
                 className="progress-slider"
             />

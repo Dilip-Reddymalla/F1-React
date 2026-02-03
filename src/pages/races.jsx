@@ -196,7 +196,7 @@ export default function Races({ year, setYear }) {
                     </span>
                     <button 
                     onClick={handleAnimateRace}
-                    disabled={selectedDriverIds.length < 2 || animationLoading}
+                    disabled={true}
                     className="animate-button"
                     >
                     {animationLoading ? "Preparing Data..." : 
