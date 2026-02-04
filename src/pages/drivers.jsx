@@ -27,13 +27,15 @@ export function Driver({ year, setYear }) {
         teams[driver.driverId] = "N/A";
       }
     }
-    console.log(teams);
+    //console.log(teams);
     
     setTeamData(teams);
   }
-
+ useEffect(() => {
+   setYear(2026):
+ },[]);
   useEffect(() => {
-    setYear(2026);
+    //setYear(2026);
     if (fetchTrigger === 0) return;
 
     async function fetchDrivers() {
@@ -56,7 +58,7 @@ export function Driver({ year, setYear }) {
     }
 
     fetchDrivers();
-  }, [fetchTrigger, year]);
+  }, [fetchTrigger]);
 
   function handleButtonClick() {
     setFetchTrigger((prev) => prev + 1);
