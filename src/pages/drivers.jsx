@@ -32,7 +32,7 @@ export function Driver({ year, setYear }) {
     setTeamData(teams);
   }
  useEffect(() => {
-   setYear(2026):
+   setYear(2026);
  },[]);
   useEffect(() => {
     //setYear(2026);
