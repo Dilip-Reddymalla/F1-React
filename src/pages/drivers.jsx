@@ -21,6 +21,20 @@ export function Driver({ year, setYear }) {
   async function fetchDriverTeams(driversArray) {
     const teams = {};
     const teamCache = teamCacheRef.current;
+
+    const allCached = driversArray.every((driver) =>
+      teamCache.has(`${year}-${driver.driverId}`),
+    );
+
+    if (allCached) {
+      driversArray.forEach((driver) => {
+        teams[driver.driverId] = teamCache.get(`${year}-${driver.driverId}`);
+      });
+
+      setTeamData(teams);
+      return;
+    }
+
     const batchSize = 2;
     const delayMs = 300;
 
