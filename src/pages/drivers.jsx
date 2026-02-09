@@ -1,9 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Dropdown } from "../components/dropdown";
 import { Header } from "../components/header";
-import {DriverImage} from "../components/driverImage";
+import { DriverImage } from "../components/driverImage";
 import "./drivers.css";
-
 
 export function Driver({ year, setYear }) {
   const [drivers, setDrivers] = useState([]);
@@ -12,41 +11,97 @@ export function Driver({ year, setYear }) {
   const [teamData, setTeamData] = useState({});
 
   const [fetchTrigger, setFetchTrigger] = useState(0);
+  const cacheDriverRef = useRef(new Map());
+  const teamCacheRef = useRef(new Map());
 
-  // Fetch teams for all drivers
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   async function fetchDriverTeams(driversArray) {
     const teams = {};
-    for (const driver of driversArray) {
-      try {
-        const teamUrl = `https://api.jolpi.ca/ergast/f1/${year}/drivers/${driver.driverId}/constructors.json`;
-        const res = await fetch(teamUrl);
-        const result = await res.json();
-        teams[driver.driverId] = result.MRData.ConstructorTable.Constructors[0]?.name ?? "N/A";
-      } catch (err) {
-        console.error(`Failed to fetch team for ${driver.driverId}:`, err);
-        teams[driver.driverId] = "N/A";
-      }
+    const teamCache = teamCacheRef.current;
+    const batchSize = 2;
+    const delayMs = 300;
+
+    for (let i = 0; i < driversArray.length; i += batchSize) {
+      const batch = driversArray.slice(i, i + batchSize);
+
+      const promises = batch.map(async (driver) => {
+        const key = `${year}-${driver.driverId}`;
+
+        if (teamCache.has(key)) {
+          return {
+            driverId: driver.driverId,
+            team: teamCache.get(key),
+          };
+        }
+
+        try {
+          const url = `https://api.jolpi.ca/ergast/f1/${year}/drivers/${driver.driverId}/constructors.json`;
+          const res = await fetch(url);
+
+          if (!res.ok) return null;
+
+          const result = await res.json();
+
+          const team =
+            result.MRData?.ConstructorTable?.Constructors[0]?.name ?? "N/A";
+
+          teamCache.set(`${year}-${driver.driverId}`, team);
+
+          return { driverId: driver.driverId, team };
+        } catch (err) {
+          console.error(
+            "Error fetching team for driver:",
+            driver.driverId,
+            err,
+          );
+          return null;
+        }
+      });
+
+      const results = await Promise.all(promises);
+
+      results.forEach((r) => {
+        if (r) teams[r.driverId] = r.team;
+      });
+      await sleep(delayMs);
     }
-    //console.log(teams);
-    
+
     setTeamData(teams);
   }
- useEffect(() => {
-   setYear(2026);
- },[]);
+
+  useEffect(() => {
+    setYear(2026);
+  }, []);
+
+  async function fectchChachedDrivers(url) {
+    const cache = cacheDriverRef.current;
+    if (cache.has(url)) {
+      return cache.get(url);
+    }
+    const res = await fetch(url);
+    const result = await res.json();
+    const driversData = result.MRData.DriverTable.Drivers;
+    const raceDrivers = driversData.filter((d) => d.code);
+    cache.set(url, raceDrivers);
+    return raceDrivers;
+  }
+
   useEffect(() => {
     //setYear(2026);
-    if (fetchTrigger === 0) return;
+    if (!fetchTrigger) return;
 
     async function fetchDrivers() {
+      setDrivers([]);
+      setTeamData({});
       setLoading(true);
       setError(null);
 
       try {
         const url = `https://api.jolpi.ca/ergast/f1/${year}/drivers.json`;
-        const res = await fetch(url);
-        const result = await res.json();
-        const driversData = result.MRData.DriverTable.Drivers;
+        const driversData = await fectchChachedDrivers(url);
 
         setDrivers(driversData);
         await fetchDriverTeams(driversData);
@@ -61,7 +116,7 @@ export function Driver({ year, setYear }) {
   }, [fetchTrigger]);
 
   function handleButtonClick() {
-    setFetchTrigger((prev) => prev + 1);
+    setFetchTrigger(year);
   }
 
   return (

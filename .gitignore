@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+#Doucmentation
+PROJECT_DOCUMENTATION.md
