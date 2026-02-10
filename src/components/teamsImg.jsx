@@ -6,7 +6,9 @@ function getWikiTitleFromUrl(url) {
   return decodeURIComponent(new URL(url).pathname.replace("/wiki/", ""));
 }
 
-export function TeamImage({ team, url }) {
+const teamImagesCache = new Map();
+
+export function TeamImage({ team, url, year }) {
   const [src, setSrc] = useState(f1);
 
   useEffect(() => {
@@ -14,6 +16,12 @@ export function TeamImage({ team, url }) {
     const WIKI_API = "https://en.wikipedia.org/api/rest_v1/page/summary/";
 
     async function fetchImage() {
+      const cacheKey = `${team.name}-${year}`;
+     if (teamImagesCache.has(cacheKey)) {
+        console.log("Using cached image for", team.name, year);
+        setSrc(teamImagesCache.get(cacheKey));
+        return;
+      }
       const wikiTitle = getWikiTitleFromUrl(team.url);
       if (!wikiTitle) return;
 
@@ -24,10 +32,12 @@ export function TeamImage({ team, url }) {
         const image = data.thumbnail?.source || data.originalimage?.source;
 
         if (!cancelled && image) {
+          console.log("Fetched image for", team.name, year);
+          teamImagesCache.set(cacheKey, image);
           setSrc(image);
         }
-      } catch {
-        // Handle errors
+      } catch (err) {
+        console.error("Error fetching image:", err);
       }
     }
 

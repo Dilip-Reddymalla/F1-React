@@ -19,72 +19,87 @@ export function Driver({ year, setYear }) {
   }
 
   async function fetchDriverTeams(driversArray) {
-    const teams = {};
-    const teamCache = teamCacheRef.current;
+  const teams = {};
+  const teamCache = teamCacheRef.current;
 
-    const allCached = driversArray.every((driver) =>
-      teamCache.has(`${year}-${driver.driverId}`),
-    );
+  const allCached = driversArray.every(driver =>
+    teamCache.has(`${year}-${driver.driverId}`)
+  );
 
-    if (allCached) {
-      driversArray.forEach((driver) => {
-        teams[driver.driverId] = teamCache.get(`${year}-${driver.driverId}`);
+  if (allCached) {
+    driversArray.forEach(driver => {
+      teams[driver.driverId] = teamCache.get(`${year}-${driver.driverId}`);
+    });
+    setTeamData(teams);
+    return;
+  }
+
+  try {
+    if (year !== 2026) {
+      const res = await fetch(
+        `https://api.jolpi.ca/ergast/f1/${year}/results.json`
+      );
+
+      if (!res.ok) throw new Error("Failed results fetch");
+
+      const data = await res.json();
+      const races = data.MRData?.RaceTable?.Races ?? [];
+
+      races.forEach(race => {
+        race.Results.forEach(result => {
+          teamCache.set(
+            `${year}-${result.Driver.driverId}`,
+            result.Constructor.name
+          );
+        });
       });
-
-      setTeamData(teams);
-      return;
     }
 
-    const batchSize = 2;
-    const delayMs = 300;
+    if (year === 2026) {
+      const DELAY_MS = 200;
 
-    for (let i = 0; i < driversArray.length; i += batchSize) {
-      const batch = driversArray.slice(i, i + batchSize);
-
-      const promises = batch.map(async (driver) => {
+      for (const driver of driversArray) {
         const key = `${year}-${driver.driverId}`;
 
-        if (teamCache.has(key)) {
-          return {
-            driverId: driver.driverId,
-            team: teamCache.get(key),
-          };
-        }
+        if (teamCache.has(key)) continue;
 
         try {
           const url = `https://api.jolpi.ca/ergast/f1/${year}/drivers/${driver.driverId}/constructors.json`;
           const res = await fetch(url);
 
-          if (!res.ok) return null;
+          if (!res.ok) {
+            teamCache.set(key, "N/A");
+            continue;
+          }
 
-          const result = await res.json();
-
+          const data = await res.json();
           const team =
-            result.MRData?.ConstructorTable?.Constructors[0]?.name ?? "N/A";
+            data.MRData?.ConstructorTable?.Constructors[0]?.name ?? "N/A";
 
-          teamCache.set(`${year}-${driver.driverId}`, team);
-
-          return { driverId: driver.driverId, team };
-        } catch (err) {
-          console.error(
-            "Error fetching team for driver:",
-            driver.driverId,
-            err,
-          );
-          return null;
+          teamCache.set(key, team);
+        } catch {
+          teamCache.set(key, "N/A");
         }
-      });
 
-      const results = await Promise.all(promises);
-
-      results.forEach((r) => {
-        if (r) teams[r.driverId] = r.team;
-      });
-      await sleep(delayMs);
+        await sleep(DELAY_MS);
+      }
     }
 
-    setTeamData(teams);
+    driversArray.forEach(driver => {
+      teams[driver.driverId] =
+        teamCache.get(`${year}-${driver.driverId}`) ?? "N/A";
+    });
+
+    const cleaned = Object.fromEntries(
+      Object.entries(teams).filter(([, v]) => v !== "N/A")
+    );
+
+    setTeamData(cleaned);
+  } catch (err) {
+    console.error("Team fetch failed:", err);
   }
+}
+
 
   useEffect(() => {
     setYear(2026);
@@ -125,9 +140,9 @@ export function Driver({ year, setYear }) {
         setLoading(false);
       }
     }
-
     fetchDrivers();
   }, [fetchTrigger]);
+  const isReady = Boolean(drivers.length && Object.keys(teamData).length);
 
   function handleButtonClick() {
     setFetchTrigger(year);
@@ -150,40 +165,44 @@ export function Driver({ year, setYear }) {
         {error && <p>{error}</p>}
 
         <div className="drivers-container">
-          {drivers.map((driver) => (
-            <div className="driver-card" key={driver.driverId}>
-              <h2 className="driver-name">
-                {driver.givenName} {driver.familyName}
-              </h2>
+          {isReady &&
+            drivers
+              .filter((driver) => driver.code && teamData[driver.driverId])
+              .map((driver) => (
+                <div className="driver-card" key={driver.driverId}>
+                  <h2 className="driver-name">
+                    {driver.givenName} {driver.familyName}
+                  </h2>
 
-              <DriverImage
-                givenName={driver.givenName}
-                familyName={driver.familyName}
-                url={driver.url}
-              />
-              <ul className="driver-data">
-                <li>
-                  <strong>Team:</strong> {teamData[driver.driverId] ?? "N/A"}
-                </li>
-                <li>
-                  <strong>Code:</strong> {driver.code ?? "N/A"}
-                </li>
-                <li>
-                  <strong>Date of Birth:</strong> {driver.dateOfBirth}
-                </li>
-                <li>
-                  <strong>Driver ID:</strong> {driver.driverId}
-                </li>
-                <li>
-                  <strong>Nationality:</strong> {driver.nationality}
-                </li>
-                <li>
-                  <strong>Permanent Number:</strong>{" "}
-                  {driver.permanentNumber ?? "N/A"}
-                </li>
-              </ul>
-            </div>
-          ))}
+                  <DriverImage
+                    givenName={driver.givenName}
+                    familyName={driver.familyName}
+                    url={driver.url}
+                  />
+                  <ul className="driver-data">
+                    <li>
+                      <strong>Team:</strong>{" "}
+                      {teamData[driver.driverId] ?? "N/A"}
+                    </li>
+                    <li>
+                      <strong>Code:</strong> {driver.code ?? "N/A"}
+                    </li>
+                    <li>
+                      <strong>Date of Birth:</strong> {driver.dateOfBirth}
+                    </li>
+                    <li>
+                      <strong>Driver ID:</strong> {driver.driverId}
+                    </li>
+                    <li>
+                      <strong>Nationality:</strong> {driver.nationality}
+                    </li>
+                    <li>
+                      <strong>Permanent Number:</strong>{" "}
+                      {driver.permanentNumber ?? "N/A"}
+                    </li>
+                  </ul>
+                </div>
+              ))}
         </div>
       </main>
     </>
