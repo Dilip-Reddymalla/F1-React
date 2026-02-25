@@ -9,7 +9,7 @@ A modern Formula 1 statistics and racing information web application built with 
 - **Race Information**: Browse race details, track information, and results
 - **Driver Details**: Comprehensive driver profiles with career information
 - **Team Information**: Constructor team data and images
-- **Race Animation**: Visual representation of race data
+- **Race Animation**: To be implemented  data-driven visual representation of lap-by-lap race progression using D3.js.
 - **Responsive Design**: Mobile-friendly interface
 
 ## Tech Stack
