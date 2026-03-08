@@ -8,7 +8,7 @@ import "./standings.css";
 
 export function Standings({ year, setYear }) {
   useEffect(() => {
-    setYear("2025");
+    setYear(2026);
   }, []);
 
   const [standings, setStandings] = useState("Drivers Championship");

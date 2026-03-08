@@ -1,0 +1,148 @@
+.splash-container {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background-color: #050505; /* Deep dark background */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;
+}
+
+.splash-container.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  display: none;
+}
+
+.splash-text-wrapper {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  width: 100%;
+  z-index: 10;
+}
+
+.splash-text {
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  font-weight: 900;
+  color: #fff;
+  text-transform: uppercase;
+  font-style: italic;
+  letter-spacing: 2px;
+  margin: 0;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: textReveal 4s ease forwards;
+  animation-delay: 0.5s;
+}
+
+.splash-subtext {
+  color: #ff1801;
+  font-size: clamp(1rem, 3vw, 2rem);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 5px;
+  margin-top: 10px;
+  opacity: 0;
+  animation: textReveal 4s ease forwards;
+  animation-delay: 0.8s;
+}
+
+.splash-car-container {
+  position: absolute;
+  bottom: -250px;
+  left: 50%;
+  width: 130px; /* Mobile friendly but scaling responsive */
+  transform: translateX(-50%);
+  animation: carDrive 4.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 20;
+}
+
+.splash-car-svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 10px rgba(0,0,0,0.5));
+}
+
+/* Simulated track lines to enhance motion */
+.track-lines {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  background-image: linear-gradient(to bottom, transparent 50%, rgba(255,255,255,0.15) 50%);
+  background-size: 100% 120px;
+  animation: trackMove 0.2s linear infinite, trackFade 4.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  z-index: 1;
+}
+
+@keyframes trackFade {
+  0%, 80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes trackMove {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 120px; }
+}
+
+@keyframes carDrive {
+  0% {
+    bottom: -250px;
+    transform: translateX(-50%) scale(0.9);
+  }
+  30% {
+    bottom: 25%;
+    transform: translateX(-50%) scale(1.1);
+  }
+  60% {
+    bottom: 45%;
+    transform: translateX(-50%) scale(1.1); /* Hold position briefly so user can read text */
+  }
+  100% {
+    bottom: 120%; /* Exit top of screen */
+    transform: translateX(-50%) scale(0.8); /* Look smaller as it drives away */
+  }
+}
+
+@keyframes textReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+    text-shadow: 0 0 0 rgba(255, 24, 1, 0);
+  }
+  15% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    text-shadow: 0 0 20px rgba(255, 24, 1, 0.7);
+  }
+  85% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    text-shadow: 0 0 20px rgba(255, 24, 1, 0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(1.05);
+    text-shadow: 0 0 0 rgba(255, 24, 1, 0);
+  }
+}
+
+/* Mobile Adjustments */
+@media (max-width: 768px) {
+  .splash-car-container {
+    width: 90px;
+  }
+  
+  .track-lines {
+    width: 4px;
+    background-size: 100% 80px;
+  }
+}

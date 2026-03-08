@@ -35,12 +35,11 @@ export function Driver({ year, setYear }) {
   }
 
   try {
-    if (year !== 2026) {
-      const res = await fetch(
-        `https://api.jolpi.ca/ergast/f1/${year}/results.json`
-      );
+    const res = await fetch(
+      `https://api.jolpi.ca/ergast/f1/${year}/results.json`
+    );
 
-      if (!res.ok) throw new Error("Failed results fetch");
+    if (!res.ok) throw new Error("Failed results fetch");
 
       const data = await res.json();
       const races = data.MRData?.RaceTable?.Races ?? [];
@@ -53,37 +52,6 @@ export function Driver({ year, setYear }) {
           );
         });
       });
-    }
-
-    if (year === 2026) {
-      const DELAY_MS = 200;
-
-      for (const driver of driversArray) {
-        const key = `${year}-${driver.driverId}`;
-
-        if (teamCache.has(key)) continue;
-
-        try {
-          const url = `https://api.jolpi.ca/ergast/f1/${year}/drivers/${driver.driverId}/constructors.json`;
-          const res = await fetch(url);
-
-          if (!res.ok) {
-            teamCache.set(key, "N/A");
-            continue;
-          }
-
-          const data = await res.json();
-          const team =
-            data.MRData?.ConstructorTable?.Constructors[0]?.name ?? "N/A";
-
-          teamCache.set(key, team);
-        } catch {
-          teamCache.set(key, "N/A");
-        }
-
-        await sleep(DELAY_MS);
-      }
-    }
 
     driversArray.forEach(driver => {
       teams[driver.driverId] =
