@@ -154,7 +154,7 @@ section {
 
 /* Latest Posts Section */
 .latest-posts {
-  padding: 4rem 1.5rem;
+  padding: 4rem 1.0rem;
   justify-content: flex-start;
   align-items: center;
   background: var(--bg-surface);
