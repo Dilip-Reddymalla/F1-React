@@ -40,6 +40,14 @@
   width: 100%;
 }
 
+.navbar.solid {
+  background-color: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+}
+
 .logo img {
   height: 36px;
 }
@@ -47,15 +55,11 @@
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .navbar {
-    flex-direction: column;
-    padding: 1rem;
-    gap: 1rem;
+    padding: 0.75rem 1rem;
   }
 
   .navbar nav {
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
+    gap: 0.75rem;
   }
 
   .navbar nav a {
@@ -65,11 +69,19 @@
   .logo img {
     height: 28px;
   }
+
+  .navbar.solid {
+    transition: background-color 0.5s ease;
+    background-color: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+  }
 }
 
 @media (max-width: 480px) {
   .navbar {
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
   }
 
   .navbar nav {
@@ -82,5 +94,12 @@
 
   .logo img {
     height: 24px;
+  }
+  .navbar.solid {
+    transition: background-color 0.5s ease;
+    background-color: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
   }
 }
