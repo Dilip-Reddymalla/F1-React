@@ -262,8 +262,10 @@ section {
 .loading-text, .error-text {
   text-align: center;
   font-size: 1.2rem;
-  color: var(--text-secondary);
+  color: #b0b0b0;
+  line-height: 1.6;
   width: 100%;
+  max-width: 900px;
 }
 
 /* Responsive */

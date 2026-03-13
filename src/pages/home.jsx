@@ -71,7 +71,7 @@ export function Home() {
 
         <section className="latest-posts" id="latest-posts">
           <h2>Latest Post</h2>
-          {loading && <p className="loading-text">Loading latest posts...</p>}
+          {loading && <div className="loading-text"><p>Loading latest posts...</p> <p>The post are being fetched from backend, which is hosted on render free plan(the backend goes to seelp after 15 minutes of inactivity) so it takes 1 minute to start the server and process the requeset. Thanks for your patience</p></div>}
           {error && <p className="error-text">Error: {error}</p>}
 
           {!loading && !error && (
