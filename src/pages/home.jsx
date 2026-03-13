@@ -20,7 +20,7 @@ export function Home() {
       }
 
       try {
-        const res = await fetch("modern-blog-page-backend-production.up.railway.app/api/get/postByTag/F1");
+        const res = await fetch("https://modern-blog-page-backend-production.up.railway.app/api/get/postByTag/F1");
         if (!res.ok) {
           throw new Error("Failed to fetch posts");
         }
