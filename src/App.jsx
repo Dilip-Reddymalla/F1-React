@@ -9,7 +9,7 @@ import { SplashScreen } from "./components/splashScreen";
 import "./App.css";
 
 function App() {
-  const [year, setYear] = useState("2025");
+  const [year, setYear] = useState("2026");
   return (
     <>
       <SplashScreen />

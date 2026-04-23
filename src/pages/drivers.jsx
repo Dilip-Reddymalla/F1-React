@@ -14,9 +14,9 @@ export function Driver({ year, setYear }) {
   const cacheDriverRef = useRef(new Map());
   const teamCacheRef = useRef(new Map());
 
-  function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
+  // function sleep(ms) {
+  //   return new Promise((resolve) => setTimeout(resolve, ms));
+  // }
 
   async function fetchDriverTeams(driversArray) {
   const teams = {};
