@@ -1,10 +1,59 @@
 import { useEffect, useState } from "react";
 import { Header } from "../components/header";
 import "./home.css";
+import CountDown from "../components/countDown";
 
 const cache = new Map();
+let postsPromise = null;
 
-export function Home() {
+async function loadPosts() {
+  if (cache.has("f1_posts")) {
+    return cache.get("f1_posts");
+  }
+
+  if (!postsPromise) {
+    postsPromise = fetch("/api/posts")
+      .then(async (res) => {
+        const contentType = res.headers.get("content-type") || "";
+        const text = await res.text();
+
+        if (!res.ok) {
+          console.error(
+            "Non-OK response from /api/posts:",
+            res.status,
+            res.statusText,
+            text,
+          );
+          throw new Error(
+            `Failed to fetch posts: ${res.status} ${res.statusText}`,
+          );
+        }
+
+        if (!contentType.includes("application/json")) {
+          console.error("Non-JSON response from /api/posts:", text);
+          throw new Error(
+            "Invalid JSON response from API; check Network tab for details",
+          );
+        }
+
+        const data = JSON.parse(text);
+        const postsArray = Array.isArray(data) ? data : data.posts || [];
+        const sortedPosts = postsArray.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+        );
+
+        cache.set("f1_posts", sortedPosts);
+        return sortedPosts;
+      })
+      .finally(() => {
+        postsPromise = null;
+      });
+  }
+
+  return postsPromise;
+}
+
+export function Home({year}) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,19 +69,10 @@ export function Home() {
       }
 
       try {
-        const res = await fetch("https://modern-blog-page-backend-production.up.railway.app/api/get/postByTag/F1");
-        if (!res.ok) {
-          throw new Error("Failed to fetch posts");
-        }
-        const data = await res.json();
+        const sortedPosts = await loadPosts();
+        console.log("Fetched posts:", sortedPosts);
 
         if (!cancelled) {
-          // Sort posts by date descending (latest first)
-          const sortedPosts = data.posts.sort(
-            (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-          );
-          cache.set("f1_posts", sortedPosts);
-
           setPosts(sortedPosts);
           setLoading(false);
         }
@@ -58,20 +98,34 @@ export function Home() {
         <section className="intro animated-hero">
           <div className="hero-content">
             <span className="hero-badge">Pinnacle of Motorsport</span>
-            <h1>Feel the Apex. <br />Experience the Thrill.</h1>
+            <h1>
+              Feel the Apex. <br />
+              Experience the Thrill.
+            </h1>
             <p>
-              Ignite your passion for Formula 1. Dive into breaking news, real-time championship standings, deep technical analysis, and exclusive driver insights.
+              Ignite your passion for Formula 1. Dive into breaking news,
+              real-time championship standings, deep technical analysis, and
+              exclusive driver insights.
             </p>
+            <CountDown year={year}  />
             <div className="hero-cta-group">
-              <a href="#latest-posts" className="hero-btn primary-btn">Latest News</a>
-              <a href="/standings" className="hero-btn secondary-btn">View Standings</a>
+              <a href="#latest-posts" className="hero-btn primary-btn">
+                Latest News
+              </a>
+              <a href="/standings" className="hero-btn secondary-btn">
+                View Standings
+              </a>
             </div>
           </div>
         </section>
 
         <section className="latest-posts" id="latest-posts">
           <h2>Latest Post</h2>
-          {loading && <div className="loading-text"><p>Loading latest posts...</p> <p>The post are being fetched from backend, which is hosted on render free plan(the backend goes to seelp after 15 minutes of inactivity) so it takes 1 minute to start the server and process the requeset. Thanks for your patience</p></div>}
+          {loading && (
+            <div className="loading-text">
+              <p>Loading latest posts...</p>{" "}
+            </div>
+          )}
           {error && <p className="error-text">Error: {error}</p>}
 
           {!loading && !error && (
@@ -97,9 +151,9 @@ export function Home() {
                     <h3 className="post-title">{post.title}</h3>
                     <div className="post-date">
                       {new Date(post.createdAt).toLocaleDateString(undefined, {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
                       })}
                     </div>
                     <div

@@ -14,7 +14,7 @@ function App() {
     <>
       <SplashScreen />
       <Routes>
-        <Route path='/' element={<Home />} />
+        <Route path='/' element={<Home year={year} />} />
         <Route path='/drivers' element={<Drivers year={year} setYear={setYear} />} />
         <Route path='/teams' element={<TeamDetails year={year} setYear={setYear} />} />
         <Route path='/races' element={<Races year={year} setYear={setYear} />} />
