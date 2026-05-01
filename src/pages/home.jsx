@@ -107,7 +107,6 @@ export function Home({year}) {
               real-time championship standings, deep technical analysis, and
               exclusive driver insights.
             </p>
-            <CountDown year={year}  />
             <div className="hero-cta-group">
               <a href="#latest-posts" className="hero-btn primary-btn">
                 Latest News
@@ -116,6 +115,9 @@ export function Home({year}) {
                 View Standings
               </a>
             </div>
+          </div>
+          <div className="hero-timeline-row">
+            <CountDown year={year} />
           </div>
         </section>
 

@@ -12,13 +12,17 @@ section {
 .intro.animated-hero {
   position: relative;
   text-align: center;
-  align-items: center;
+  align-items: stretch;
   background: var(--bg-surface);
-  overflow: hidden;
-  min-height: 80vh;
+  overflow-x: hidden;
+  overflow-y: visible;
+  min-height: auto;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2rem;
   border-bottom: 2px solid #ff1801;
+  padding: 3rem 3.5rem 2.5rem;
 }
 
 /* Moving Grid Background */
@@ -29,11 +33,12 @@ section {
   left: 0;
   width: 200%;
   height: 200%;
-  background-image: 
+  background-image:
     linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
-  transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+  transform: perspective(500px) rotateX(60deg) translateY(-100px)
+    translateZ(-200px);
   animation: gridMove 15s linear infinite;
   z-index: 0;
   pointer-events: none;
@@ -48,14 +53,24 @@ section {
   transform: translateX(-50%);
   width: 60%;
   height: 40%;
-  background: radial-gradient(ellipse at bottom, rgba(255, 24, 1, 0.15) 0%, transparent 70%);
+  background: radial-gradient(
+    ellipse at bottom,
+    rgba(255, 24, 1, 0.15) 0%,
+    transparent 70%
+  );
   z-index: 1;
   pointer-events: none;
 }
 
 @keyframes gridMove {
-  0% { transform: perspective(500px) rotateX(60deg) translateY(0) translateZ(-200px); }
-  100% { transform: perspective(500px) rotateX(60deg) translateY(40px) translateZ(-200px); }
+  0% {
+    transform: perspective(500px) rotateX(60deg) translateY(0)
+      translateZ(-200px);
+  }
+  100% {
+    transform: perspective(500px) rotateX(60deg) translateY(40px)
+      translateZ(-200px);
+  }
 }
 
 .hero-content {
@@ -65,8 +80,28 @@ section {
   flex-direction: column;
   align-items: center;
   gap: 1.5rem;
-  max-width: 800px;
-  padding: 0 1.5rem;
+  width: min(100%, 900px);
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0;
+}
+
+.hero-timeline-row {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1400px;
+  margin-inline: auto;
+  margin-top: 0;
+  padding-inline: 0;
+}
+
+.hero-timeline-row > * {
+  width: 100%;
+}
+
+.intro.animated-hero > * {
+  width: 100%;
 }
 
 .hero-badge {
@@ -83,9 +118,15 @@ section {
 }
 
 @keyframes pulse {
-  0% { box-shadow: 0 0 0 0 rgba(255, 24, 1, 0.4); }
-  70% { box-shadow: 0 0 0 10px rgba(255, 24, 1, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(255, 24, 1, 0); }
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 24, 1, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 24, 1, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 24, 1, 0);
+  }
 }
 
 .intro.animated-hero h1 {
@@ -154,7 +195,7 @@ section {
 
 /* Latest Posts Section */
 .latest-posts {
-  padding: 4rem 1.0rem;
+  padding: 4rem 1rem;
   justify-content: flex-start;
   align-items: center;
   background: var(--bg-surface);
@@ -183,7 +224,9 @@ section {
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   border: 1px solid var(--border-subtle);
-  transition: transform 0.3s ease, border-color 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease;
 }
 
 .post-card:hover {
@@ -259,7 +302,8 @@ section {
   margin-bottom: 0;
 }
 
-.loading-text, .error-text {
+.loading-text,
+.error-text {
   text-align: center;
   font-size: 1.2rem;
   color: #b0b0b0;
@@ -272,6 +316,16 @@ section {
 @media (max-width: 768px) {
   section {
     padding: 2.5rem 1.5rem;
+  }
+
+  .intro.animated-hero {
+    padding: 2rem 1.5rem 2rem;
+    gap: 1.5rem;
+  }
+
+  .hero-timeline-row {
+    margin-top: 1.5rem;
+    padding-inline: 0;
   }
 
   .intro h1 {
