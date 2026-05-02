@@ -24,7 +24,6 @@ export default async function handler(req, res) {
 
     res.setHeader("Cache-Control", "public, max-age=30, stale-while-revalidate=60");
     res.status(200).json(posts);
-    console.log(posts);
   } catch (error) {
     res.status(500).json({
       error: error.message,
