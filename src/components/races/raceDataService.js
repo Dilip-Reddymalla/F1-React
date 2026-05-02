@@ -1,31 +1,121 @@
 const driverLapCache = new Map();
-const driverColorPalette = [
-  "#1E41FF",
-  "#00D2BE",
-  "#DC0000",
-  "#FF8700",
-  "#006F62",
-  "#9B59B6",
-  "#F1C40F",
-  "#E67E22",
-  "#95A5A6",
-  "#E74C3C",
-];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const F1_TEAM_COLORS = {
+  // 🟠 McLaren — Papaya Orange / Anthracite
+  mclaren: { primary: "#FF8000", accent: "#1A1A2E" },
+
+  // 🔴 Scuderia Ferrari — Rosso Corsa / Yellow
+  ferrari: { primary: "#DC0000", accent: "#FFF200" },
+
+  // 🔵 Red Bull Racing — Dark Blue / Red
+  redbull: { primary: "#1E3A6E", accent: "#CC1E1E" },
+
+  // ⚫ Mercedes-AMG Petronas — Silver / Teal
+  mercedes: { primary: "#C0C0C0", accent: "#00A19B" },
+
+  // 🟢 Aston Martin — British Racing Green / Lime
+  astonmartin: { primary: "#00665E", accent: "#B0FF00" },
+
+  // 🩷 Alpine — Blue / Pink
+  alpine: { primary: "#0078FF", accent: "#FF69B4" },
+
+  // ⚪ Haas — White / Red
+  haas: { primary: "#E8002D", accent: "#FFFFFF" },
+
+  // ⚪ Racing Bulls (VCARB) — White / Navy
+  racingbulls: { primary: "#1E41FF", accent: "#C8102E" },
+
+  // 🔵 Williams — Navy Blue / Azure
+  williams: { primary: "#005AFF", accent: "#00A3E0" },
+
+  // 🟢 Kick Sauber — Lime Green / Black
+  sauber: { primary: "#52E252", accent: "#121212" },
+};
+
+const F1_DRIVER_COLORS = {
+  // McLaren
+  norris: F1_TEAM_COLORS.mclaren.primary, // Lando Norris  #4  🟠
+  piastri: F1_TEAM_COLORS.mclaren.accent, // Oscar Piastri #81
+
+  // Ferrari
+  leclerc: F1_TEAM_COLORS.ferrari.primary, // Charles Leclerc #16 🔴
+  hamilton: F1_TEAM_COLORS.ferrari.accent, // Lewis Hamilton  #44
+
+  // Red Bull Racing
+  verstappen: F1_TEAM_COLORS.redbull.primary, // Max Verstappen #1  🔵
+  lawson: F1_TEAM_COLORS.redbull.accent, // Liam Lawson    #30
+
+  // Mercedes
+  russell: F1_TEAM_COLORS.mercedes.primary, // George Russell  #63 ⚫
+  antonelli: F1_TEAM_COLORS.mercedes.accent, // Kimi Antonelli  #12
+
+  // Aston Martin
+  alonso: F1_TEAM_COLORS.astonmartin.primary, // Fernando Alonso #14 🟢
+  stroll: F1_TEAM_COLORS.astonmartin.accent, // Lance Stroll    #18
+
+  // Alpine
+  gasly: F1_TEAM_COLORS.alpine.primary, // Pierre Gasly    #10 🩷
+  colapinto: F1_TEAM_COLORS.alpine.accent, // Franco Colapinto #43
+
+  // Haas
+  ocon: F1_TEAM_COLORS.haas.primary, // Esteban Ocon   #31 ⚪
+  bearman: F1_TEAM_COLORS.haas.accent, // Oliver Bearman #87
+
+  // Racing Bulls
+  tsunoda: F1_TEAM_COLORS.racingbulls.primary, // Yuki Tsunoda   #22 ⚪
+  hadjar: F1_TEAM_COLORS.racingbulls.accent, // Isack Hadjar   #6
+
+  // Williams
+  sainz: F1_TEAM_COLORS.williams.primary, // Carlos Sainz   #55 🔵
+  albon: F1_TEAM_COLORS.williams.accent, // Alex Albon     #23
+
+  // Kick Sauber
+  hulkenberg: F1_TEAM_COLORS.sauber.primary, // Nico Hülkenberg #27 🟢
+  bortoleto: F1_TEAM_COLORS.sauber.accent, // Gabriel Bortoleto #5
+};
+
+function normalizeDriverKey(id = "") {
+  return String(id)
+    .toLowerCase()
+    .replace(/[\s\-_]+/g, "")
+    .replace(/[^a-z]/g, "");
+}
+
+function hashColor(seed) {
+  // Deterministic fallback from a palette of team secondaries
+  const fallbackPool = Object.values(F1_TEAM_COLORS).flatMap((t) => [
+    t.primary,
+    t.accent,
+  ]);
+  const hash = Math.abs(
+    String(seed)
+      .split("")
+      .reduce((acc, ch) => acc + ch.charCodeAt(0), 0),
+  );
+  return fallbackPool[hash % fallbackPool.length];
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Public API  (drop-in replacement for your original functions)
+// ─────────────────────────────────────────────────────────────────
+
 export function assignDriverColor(driverId, index = 0) {
-  const fallbackIndex = Math.abs(String(driverId || index).split("").reduce((total, char) => total + char.charCodeAt(0), 0));
-  return driverColorPalette[fallbackIndex % driverColorPalette.length];
+  const key = normalizeDriverKey(driverId);
+  return F1_DRIVER_COLORS[key] ?? hashColor(driverId || index);
 }
 
 export function assignDriverColors(drivers = []) {
   return drivers.map((driver, index) => ({
     ...driver,
-    color: driver.color || assignDriverColor(driver.id || driver.driverId, index),
+    color:
+      driver.color ||
+      assignDriverColor(driver.id ?? driver.driverId ?? driver.name, index),
   }));
 }
 
+export { F1_TEAM_COLORS, F1_DRIVER_COLORS };
 export async function getRaceData(year, round, driverIds) {
   if (!year || !round || !driverIds) return null;
 
