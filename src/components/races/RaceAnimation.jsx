@@ -76,12 +76,29 @@ export default function RaceAnimation({
     const svg = d3
       .select(ref.current)
       .append("svg")
+      .attr("class", "race-animation-svg")
       .attr("width", "100%")
       .attr("viewBox", `0 0 ${width} ${hight}`)
       .attr("preserveAspectRatio", "xMidYMin meet")
       .attr("height", hight)
-      .style("background", "#0B0D10")
       .style("display", "block");
+
+    const defs = svg.append("defs");
+
+    defs.append("style").text(`
+      .driver-line { filter: none; }
+      .driver-label {
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .axis text {
+        fill: #c8ccd4;
+        font-weight: 600;
+      }
+      .axis path, .axis line {
+        stroke: rgba(255, 255, 255, 0.28);
+      }
+    `);
 
     const chart = svg
       .append("g")
@@ -111,6 +128,7 @@ export default function RaceAnimation({
 
     chart
       .append("g")
+      .attr("class", "axis axis-x")
       .attr("transform", `translate(0, ${innerHeight})`)
       .call(d3.axisBottom(x).ticks(xTickCount).tickFormat(d3.format("d")))
       .selectAll("text")
@@ -119,6 +137,7 @@ export default function RaceAnimation({
 
     chart
       .append("g")
+      .attr("class", "axis axis-y")
       .call(
         d3
           .axisLeft(y)
@@ -155,9 +174,12 @@ export default function RaceAnimation({
       linesGroup
         .append("path")
         .datum(driver.data)
+        .attr("class", "driver-line")
         .attr("fill", "none")
         .attr("stroke", driver.color)
-        .attr("stroke-width", isMobile ? 3 : 4)
+        .attr("stroke-width", isMobile ? 3.5 : 4.5)
+        .attr("stroke-linecap", "round")
+        .attr("stroke-linejoin", "round")
         .attr("d", line);
     });
 
@@ -326,12 +348,7 @@ export default function RaceAnimation({
   return (
     <div
       ref={ref}
-      style={{
-        width: "100%",
-        maxWidth: "1200px",
-        margin: "auto",
-        overflowX: "hidden",
-      }}
+      className="race-animation-stage"
     />
   );
 }
