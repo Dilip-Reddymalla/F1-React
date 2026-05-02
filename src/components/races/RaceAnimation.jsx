@@ -83,7 +83,6 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
         
         // Debug: Log progress every 5 laps
         // if (currentLapIndex % 5 === 0 && lapInternalFraction < 0.1) {
-        //     console.log(`Lap ${currentLapIndex}: baseRaceProgress = ${(baseRaceProgress * 100).toFixed(1)}% of track`);
         // }
         
         // CRITICAL FIX: Sort drivers by position to get RELATIVE rank (1, 2, 3...)
@@ -142,7 +141,6 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
 
         // Debug: Log EVERY update for the first few laps
         // if (currentLapIndex < 3) {
-        //     console.log(`Frame: Lap ${progressFloat.toFixed(2)}, Progress=${(baseRaceProgress*100).toFixed(1)}%`, 
         //         newMarkers.map(m => `${m.info.code}:(${m.x.toFixed(0)},${m.y.toFixed(0)})`).join(' '));
         // }
 
@@ -169,7 +167,6 @@ export function RaceAnimation({ timeline, allResults, onClose }) {
           
           // Debug logging (remove after testing)
           // if (Math.floor(lapProgressRef.current) !== Math.floor(lapProgressRef.current - increment)) {
-          //     console.log(`Lap ${Math.floor(lapProgressRef.current)}/${totalLaps}`);
           // }
       
           

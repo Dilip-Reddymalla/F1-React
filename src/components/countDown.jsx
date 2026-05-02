@@ -32,6 +32,7 @@ const CountDown = ({ year }) => {
         timeStyle: "short",
         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }).format(eventDateTime),
+      totalRemainingMs: timeRemainingMs,
       timeRemaining: {
         days: Math.floor(timeRemainingMs / (1000 * 60 * 60 * 24)),
         hours: Math.floor(
@@ -53,6 +54,29 @@ const CountDown = ({ year }) => {
           : new Date(eventDate).getTime();
 
         let remainingTime = eventTime - currentTime;
+
+        setOtherRaceDayEventsData((currentEvents) =>
+          currentEvents.map((event) => {
+            const eventStartTime = event.startAt;
+            const timeUntilEvent = Math.max(0, eventStartTime - currentTime);
+
+            return {
+              ...event,
+              totalRemainingMs: timeUntilEvent,
+              timeRemaining: {
+                days: Math.floor(timeUntilEvent / (1000 * 60 * 60 * 24)),
+                hours: Math.floor(
+                  (timeUntilEvent % (1000 * 60 * 60 * 24)) /
+                    (1000 * 60 * 60),
+                ),
+                minutes: Math.floor(
+                  (timeUntilEvent % (1000 * 60 * 60)) / (1000 * 60),
+                ),
+                seconds: Math.floor((timeUntilEvent % (1000 * 60)) / 1000),
+              },
+            };
+          }),
+        );
 
         if (remainingTime <= 0) {
           remainingTime = 0;
@@ -88,7 +112,6 @@ const CountDown = ({ year }) => {
   useEffect(() => {
     async function fetchEventData() {
       const url = `https://api.jolpi.ca/ergast/f1/${year}/races.json`;
-      console.log("[CountDown] fetch start", { year, url });
 
       try {
         const res = await fetch(url);
@@ -96,27 +119,15 @@ const CountDown = ({ year }) => {
 
         const data = await res.json();
         const allRaces = data?.MRData?.RaceTable?.Races || [];
-        console.log("[CountDown] races loaded", {
-          count: allRaces.length,
-          firstRace: allRaces[0]?.raceName,
-          firstRaceDate: allRaces[0]?.date,
-        });
 
         const nextRace = allRaces.find(
           (race) => new Date(race.date) > new Date(),
         );
-        console.log(
-          "[CountDown] next race",
-          nextRace?.raceName,
-          nextRace?.date,
-        );
-
         const raceWeekendData = [];
         const currentRace = nextRace;
         const findRaceEvent = () => currentRace;
 
         const firstPractice = findRaceEvent("FirstPractice");
-        console.log("[CountDown] first practice", firstPractice?.FirstPractice);
 
         const firstPracticeData = buildEventData(
           firstPractice,
@@ -125,10 +136,6 @@ const CountDown = ({ year }) => {
         );
         if (firstPracticeData) raceWeekendData.push(firstPracticeData);
         const secondPractice = findRaceEvent("SecondPractice");
-        console.log(
-          "[CountDown] second practice",
-          secondPractice?.SecondPractice,
-        );
         const secondPracticeData = buildEventData(
           secondPractice,
           "SecondPractice",
@@ -136,7 +143,6 @@ const CountDown = ({ year }) => {
         );
         if (secondPracticeData) raceWeekendData.push(secondPracticeData);
         const thirdPractice = findRaceEvent("ThirdPractice");
-        console.log("[CountDown] third practice", thirdPractice?.ThirdPractice);
         const thirdPracticeData = buildEventData(
           thirdPractice,
           "ThirdPractice",
@@ -145,10 +151,6 @@ const CountDown = ({ year }) => {
         if (thirdPracticeData) raceWeekendData.push(thirdPracticeData);
 
         const sprintQualifying = findRaceEvent("SprintQualifying");
-        console.log(
-          "[CountDown] sprint qualifying",
-          sprintQualifying?.SprintQualifying,
-        );
         const sprintQualifyingData = buildEventData(
           sprintQualifying,
           "SprintQualifying",
@@ -157,12 +159,10 @@ const CountDown = ({ year }) => {
         if (sprintQualifyingData) raceWeekendData.push(sprintQualifyingData);
 
         const sprint = findRaceEvent("Sprint");
-        console.log("[CountDown] sprint", sprint?.Sprint);
         const sprintData = buildEventData(sprint, "Sprint", "Sprint");
         if (sprintData) raceWeekendData.push(sprintData);
 
         const qualifying = findRaceEvent("Qualifying");
-        console.log("[CountDown] qualifying", qualifying?.Qualifying);
         const qualifyingData = buildEventData(
           qualifying,
           "Qualifying",
@@ -178,16 +178,6 @@ const CountDown = ({ year }) => {
                 current.name === event.name && current.date === event.date,
             ),
         );
-
-        console.log("[CountDown] weekend data", {
-          rawCount: raceWeekendData.length,
-          uniqueCount: uniqueWeekendData.length,
-          events: uniqueWeekendData.map((event) => ({
-            name: event.name,
-            date: event.date,
-            time: event.time,
-          })),
-        });
 
         setOtherRaceDayEventsData(uniqueWeekendData);
 
@@ -212,7 +202,7 @@ const CountDown = ({ year }) => {
   const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
   const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
 
-  const upcomingEvents = otherRaceDayEventsData.sort(
+  const upcomingEvents = [...otherRaceDayEventsData].sort(
     (firstEvent, secondEvent) => {
       const firstTime = firstEvent.startAt || 0;
       const secondTime = secondEvent.startAt || 0;
@@ -334,13 +324,6 @@ const CountDown = ({ year }) => {
       if (rafId) cancelAnimationFrame(rafId);
     };
   }, [timelineEvents.length]);
-
-  console.log("[CountDown] render state", {
-    eventDate,
-    countDownStarted,
-    storedEvents: otherRaceDayEventsData.length,
-    shownEvents: upcomingEvents.length,
-  });
 
   return (
     <>

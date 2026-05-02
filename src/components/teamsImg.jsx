@@ -18,7 +18,6 @@ export function TeamImage({ team, url, year }) {
     async function fetchImage() {
       const cacheKey = `${team.name}-${year}`;
      if (teamImagesCache.has(cacheKey)) {
-        console.log("Using cached image for", team.name, year);
         setSrc(teamImagesCache.get(cacheKey));
         return;
       }
@@ -32,7 +31,6 @@ export function TeamImage({ team, url, year }) {
         const image = data.thumbnail?.source || data.originalimage?.source;
 
         if (!cancelled && image) {
-          console.log("Fetched image for", team.name, year);
           teamImagesCache.set(cacheKey, image);
           setSrc(image);
         }

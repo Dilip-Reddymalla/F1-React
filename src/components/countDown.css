@@ -44,6 +44,7 @@
 .countdown-subtitle {
   color: var(--text-secondary);
   font-size: 0.98rem;
+  text-align: center;
 }
 
 .countdown-display {

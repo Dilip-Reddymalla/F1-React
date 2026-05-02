@@ -15,7 +15,6 @@ export async function getRaceData(year, round, driverIds) {
           `https://api.jolpi.ca/ergast/f1/${year}/${round}/drivers/${driverId}/laps.json?limit=2000`,
         );
         const data = await response.json();
-        console.log(data);
         const raceInfo = data.MRData.RaceTable.Races[0];
 
         // Extract circuit name from first successful response
@@ -37,11 +36,6 @@ export async function getRaceData(year, round, driverIds) {
       return null;
     }
 
-    console.log("🏁 Circuit detected:", circuitName);
-    console.log(
-      `Found lap data for ${Object.keys(allLapsData).length} drivers`,
-    );
-
     // Process and combine lap data
     const { lapData, driverTotalTimes } =
       processRealLapsIndividual(allLapsData);
@@ -57,8 +51,6 @@ export async function getRaceData(year, round, driverIds) {
       formattedTotalTimes[driverId] = convertSecondsToTime(totalSeconds);
     });
 
-    console.log(lapData);
-    console.log(formattedTotalTimes);
     const totalRaceLaps = lapData[lapData.length - 1].lap;
 
     return {

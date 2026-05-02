@@ -70,7 +70,6 @@ export function Home({year}) {
 
       try {
         const sortedPosts = await loadPosts();
-        console.log("Fetched posts:", sortedPosts);
 
         if (!cancelled) {
           setPosts(sortedPosts);
