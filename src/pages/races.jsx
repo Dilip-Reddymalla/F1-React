@@ -6,7 +6,7 @@ import { Podium } from "../components/races/Podium";
 import { ResultsTable } from "../components/races/ResultsTable";
 import { DriverDetails } from "../components/races/DriverDetails";
 import { getRaceData } from "../components/races/raceDataService";
-import { RaceAnimation } from "../components/races/RaceAnimation";
+import RaceAnimation from "../components/races/RaceAnimation";
 import "./races.css";
 
 export default function Races({ year, setYear }) {
@@ -109,7 +109,7 @@ export default function Races({ year, setYear }) {
         if (selectedDriverIds.includes(driverId)) {
             setSelectedDriverIds(prev => prev.filter(id => id !== driverId));
         } else {
-            if (selectedDriverIds.length < 5) {
+            if (selectedDriverIds.length < 22) {
                 setSelectedDriverIds(prev => [...prev, driverId]);
             }
         }
@@ -120,7 +120,7 @@ export default function Races({ year, setYear }) {
         try {
             const data = await getRaceData(year, selectedRound, selectedDriverIds, allResults);
             setRaceTimeline(data);
-            // Scroll effect is handled purely by useEffect now
+            // Scroll effect 
 
         } catch (err) {
             console.error("Animation prep failed", err);
@@ -170,7 +170,8 @@ export default function Races({ year, setYear }) {
                 {raceTimeline && (
                     <div ref={animationRef} className="animation-wrapper">
                         <RaceAnimation
-                            timeline={raceTimeline}
+                            selectedDriverIds={selectedDriverIds}
+                            trackData={raceTimeline}
                             allResults={allResults}
                             onClose={() => setRaceTimeline(null)}
                         />
@@ -194,11 +195,11 @@ export default function Races({ year, setYear }) {
                 {allResults.length > 0 && selectedDriverIds.length > 0 && !raceTimeline && (
                     <div className="animation-fab-container">
                         <span className="selection-count">
-                            {selectedDriverIds.length} / 5 Selected
+                            {selectedDriverIds.length} / 22 Selected
                         </span>
                         <button
                             onClick={handleAnimateRace}
-                            disabled={true}
+                            disabled={false}
                             className="animate-button"
                         >
                             {animationLoading ? "Preparing Data..." :

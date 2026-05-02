@@ -21,7 +21,7 @@ export function ResultsTable({ results, onDriverSelect, selectedDriverIds, onTog
         <tbody>
           {results.map((result) => {
              const isSelected = selectedDriverIds?.includes(result.Driver.driverId);
-             const isMaxSelected = selectedDriverIds?.length >= 5;
+             const isMaxSelected = selectedDriverIds?.length >= 22;
              const isDisabled = !isSelected && isMaxSelected;
 
              return (

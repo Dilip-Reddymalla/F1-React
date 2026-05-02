@@ -1,5 +1,30 @@
-// Helper to pause for simulation effects
-// const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+const driverLapCache = new Map();
+const driverColorPalette = [
+  "#1E41FF",
+  "#00D2BE",
+  "#DC0000",
+  "#FF8700",
+  "#006F62",
+  "#9B59B6",
+  "#F1C40F",
+  "#E67E22",
+  "#95A5A6",
+  "#E74C3C",
+];
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function assignDriverColor(driverId, index = 0) {
+  const fallbackIndex = Math.abs(String(driverId || index).split("").reduce((total, char) => total + char.charCodeAt(0), 0));
+  return driverColorPalette[fallbackIndex % driverColorPalette.length];
+}
+
+export function assignDriverColors(drivers = []) {
+  return drivers.map((driver, index) => ({
+    ...driver,
+    color: driver.color || assignDriverColor(driver.id || driver.driverId, index),
+  }));
+}
 
 export async function getRaceData(year, round, driverIds) {
   if (!year || !round || !driverIds) return null;
@@ -11,6 +36,12 @@ export async function getRaceData(year, round, driverIds) {
 
     for (const driverId of driverIds) {
       try {
+        const cacheKey = `${year}:${round}:${driverId}`;
+        if (driverLapCache.has(cacheKey)) {
+          allLapsData[driverId] = driverLapCache.get(cacheKey);
+          continue;
+        }
+
         const response = await fetch(
           `https://api.jolpi.ca/ergast/f1/${year}/${round}/drivers/${driverId}/laps.json?limit=2000`,
         );
@@ -25,10 +56,13 @@ export async function getRaceData(year, round, driverIds) {
         const lapsData = raceInfo?.Laps || [];
         if (lapsData.length > 0) {
           allLapsData[driverId] = lapsData;
+          driverLapCache.set(cacheKey, lapsData);
         }
       } catch (err) {
         console.warn(`Error fetching lap data for driver ${driverId}:`, err);
       }
+
+      await sleep(250);
     }
 
     if (Object.keys(allLapsData).length === 0) {
