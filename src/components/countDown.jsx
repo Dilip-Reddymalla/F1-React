@@ -113,6 +113,12 @@ const CountDown = ({ year }) => {
     async function fetchEventData() {
       const url = `https://api.jolpi.ca/ergast/f1/${year}/races.json`;
 
+      const getRaceStartTime = (race) => {
+        if (!race?.date) return 0;
+
+        return new Date(`${race.date}T${race.time || "00:00:00Z"}`).getTime();
+      };
+
       try {
         const res = await fetch(url);
         if (!res.ok) throw new Error("Failed to fetch event data");
@@ -120,9 +126,8 @@ const CountDown = ({ year }) => {
         const data = await res.json();
         const allRaces = data?.MRData?.RaceTable?.Races || [];
 
-        const nextRace = allRaces.find(
-          (race) => new Date(race.date) > new Date(),
-        );
+        const now = Date.now();
+        const nextRace = allRaces.find((race) => getRaceStartTime(race) >= now);
         const raceWeekendData = [];
         const currentRace = nextRace;
         const findRaceEvent = () => currentRace;

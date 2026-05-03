@@ -208,7 +208,7 @@ export default function RaceAnimation({
         }
       });
 
-    labels.transition().delay(2000).duration(1000).style("opacity", 1);
+    labels.transition().delay(1000).duration(1000).style("opacity", 1);
 
     const dots = chart
       .selectAll(".dot")
