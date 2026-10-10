@@ -5,11 +5,20 @@
   "functions": {
     "api/*.js": {
       "maxDuration": 30
+    },
+    "api/cron/*.js": {
+      "maxDuration": 60
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/auto-post",
+      "schedule": "0 3 * * *"
+    }
+  ],
   "rewrites": [
     {
-      "source": "/((?!api/|assets/|_vercel/|@vite/|@react-refresh|src/|.*\\..*).*)",
+      "source": "/((?!api/|assets/|_vercel/|@vite/|@react-refresh|src/|.*\\\\..*).*)",
       "destination": "/index.html"
     }
   ]

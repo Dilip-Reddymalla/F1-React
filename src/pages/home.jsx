@@ -42,7 +42,14 @@ async function loadPosts() {
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
         );
 
-        cache.set("f1_posts", sortedPosts);
+        // Only cache real MongoDB posts, not fallback posts
+        const isFallback = sortedPosts.some((p) =>
+          String(p._id || "").startsWith("fallback-")
+        );
+        if (!isFallback && sortedPosts.length > 0) {
+          cache.set("f1_posts", sortedPosts);
+        }
+
         return sortedPosts;
       })
       .finally(() => {
@@ -53,10 +60,21 @@ async function loadPosts() {
   return postsPromise;
 }
 
-export function Home({year}) {
+const POSTS_PER_PAGE = 4;
+
+function getVisiblePages(current, total) {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  if (current <= 4) return [1, 2, 3, 4, 5, "...", total];
+  if (current >= total - 3)
+    return [1, "...", total - 4, total - 3, total - 2, total - 1, total];
+  return [1, "...", current - 1, current, current + 1, "...", total];
+}
+
+export function Home({ year }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     let cancelled = false;
@@ -85,10 +103,36 @@ export function Home({year}) {
 
     fetchPosts();
 
+    const handleAutoSync = () => {
+      console.log("[Home] Post auto-synced! Refreshing posts feed...");
+      cache.delete("f1_posts");
+      loadPosts()
+        .then((updated) => setPosts(updated))
+        .catch(console.error);
+    };
+
+    window.addEventListener("f1:post-auto-synced", handleAutoSync);
+
     return () => {
       cancelled = true;
+      window.removeEventListener("f1:post-auto-synced", handleAutoSync);
     };
   }, []);
+
+  const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
+  const paginatedPosts = posts.slice(
+    (currentPage - 1) * POSTS_PER_PAGE,
+    currentPage * POSTS_PER_PAGE
+  );
+
+  const handlePageChange = (newPage) => {
+    if (newPage < 1 || newPage > totalPages) return;
+    setCurrentPage(newPage);
+    const el = document.getElementById("latest-posts");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <>
@@ -121,7 +165,7 @@ export function Home({year}) {
         </section>
 
         <section className="latest-posts" id="latest-posts">
-          <h2>Latest Post</h2>
+          <h2>Latest Posts</h2>
           {loading && (
             <div className="loading-text">
               <p>Loading latest posts...</p>{" "}
@@ -130,41 +174,93 @@ export function Home({year}) {
           {error && <p className="error-text">Error: {error}</p>}
 
           {!loading && !error && (
-            <div className="posts-container">
-              {posts.map((post) => (
-                <article key={post._id} className="post-card">
-                  <div className="post-image-container">
-                    <img
-                      src={post.coverImage}
-                      alt={post.title}
-                      className="post-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                  <div className="post-content-container">
-                    <div className="post-tags">
-                      {post.tags.map((tag, idx) => (
-                        <span key={idx} className="post-tag">
-                          {tag}
-                        </span>
-                      ))}
+            <>
+              <div className="posts-container">
+                {paginatedPosts.map((post) => (
+                  <article key={post._id} className="post-card">
+                    <div className="post-image-container">
+                      <img
+                        src={post.coverImage}
+                        alt={post.title}
+                        className="post-cover"
+                        loading="lazy"
+                      />
                     </div>
-                    <h3 className="post-title">{post.title}</h3>
-                    <div className="post-date">
-                      {new Date(post.createdAt).toLocaleDateString(undefined, {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
+                    <div className="post-content-container">
+                      <div className="post-tags">
+                        {post.tags.map((tag, idx) => (
+                          <span key={idx} className="post-tag">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                      <h3 className="post-title">{post.title}</h3>
+                      <div className="post-date">
+                        {new Date(post.createdAt).toLocaleDateString(undefined, {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </div>
+                      <div
+                        className="post-body"
+                        dangerouslySetInnerHTML={{ __html: post.content }}
+                      />
                     </div>
-                    <div
-                      className="post-body"
-                      dangerouslySetInnerHTML={{ __html: post.content }}
-                    />
+                  </article>
+                ))}
+              </div>
+
+              {totalPages > 1 && (
+                <div className="posts-pagination">
+                  <div className="pagination-info">
+                    Showing {(currentPage - 1) * POSTS_PER_PAGE + 1}–
+                    {Math.min(currentPage * POSTS_PER_PAGE, posts.length)} of{" "}
+                    {posts.length} posts
                   </div>
-                </article>
-              ))}
-            </div>
+                  <div className="pagination-controls">
+                    <button
+                      className="pagination-btn nav-btn"
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      aria-label="Previous page"
+                    >
+                      ‹ Prev
+                    </button>
+
+                    <div className="pagination-numbers">
+                      {getVisiblePages(currentPage, totalPages).map((item, idx) =>
+                        item === "..." ? (
+                          <span key={`ellipsis-${idx}`} className="pagination-ellipsis">
+                            …
+                          </span>
+                        ) : (
+                          <button
+                            key={item}
+                            className={`pagination-btn number-btn ${
+                              currentPage === item ? "active" : ""
+                            }`}
+                            onClick={() => handlePageChange(item)}
+                            aria-label={`Go to page ${item}`}
+                          >
+                            {item}
+                          </button>
+                        )
+                      )}
+                    </div>
+
+                    <button
+                      className="pagination-btn nav-btn"
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      aria-label="Next page"
+                    >
+                      Next ›
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
       </main>
