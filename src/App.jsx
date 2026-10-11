@@ -5,6 +5,7 @@ import Drivers from "./pages/drivers";
 import Races from "./pages/races";
 import { TeamDetails } from "./pages/teams";
 import { Standings } from "./pages/standings";
+import GlobeTour from "./pages/globeTour";
 import { SplashScreen } from "./components/splashScreen";
 import "./App.css";
 
@@ -15,6 +16,7 @@ function App() {
       <SplashScreen />
       <Routes>
         <Route path='/' element={<Home year={year} />} />
+        <Route path='/globe' element={<GlobeTour year={year} setYear={setYear} />} />
         <Route path='/drivers' element={<Drivers year={year} setYear={setYear} />} />
         <Route path='/teams' element={<TeamDetails year={year} setYear={setYear} />} />
         <Route path='/races' element={<Races year={year} setYear={setYear} />} />

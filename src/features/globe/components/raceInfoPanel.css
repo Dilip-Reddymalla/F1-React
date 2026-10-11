@@ -1,0 +1,392 @@
+.race-info-grid {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem 2rem 3rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 1.5rem;
+}
+
+.f1-telemetry-card {
+  background: linear-gradient(180deg, rgba(26, 26, 30, 0.92), rgba(15, 15, 18, 0.96));
+  background-image: radial-gradient(circle at top left, rgba(225, 6, 0, 0.16), transparent 45%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  padding: 1.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.f1-telemetry-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(225, 6, 0, 0.35);
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-kicker {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: var(--accent-primary);
+  text-transform: uppercase;
+}
+
+.card-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sprint-tag {
+  font-size: 0.65rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 140, 0, 0.16);
+  color: #ff9100;
+  border: 1px solid rgba(255, 140, 0, 0.35);
+  letter-spacing: 0.08em;
+}
+
+.status-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  letter-spacing: 0.08em;
+}
+
+.status-badge.status-live {
+  background: rgba(0, 230, 118, 0.18);
+  color: var(--accent-success);
+  border: 1px solid rgba(0, 230, 118, 0.35);
+  animation: pulse 1.8s infinite;
+}
+
+.status-badge.status-next {
+  background: rgba(225, 6, 0, 0.18);
+  color: var(--accent-primary);
+  border: 1px solid rgba(225, 6, 0, 0.35);
+}
+
+.status-badge.status-done {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.status-badge.status-upcoming {
+  background: rgba(0, 176, 255, 0.12);
+  color: var(--accent-info);
+}
+
+.track-code-badge {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+}
+
+.tz-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+}
+
+.card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.race-headline {
+  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.circuit-subhead {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.location-flag-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.card-flag {
+  width: 24px;
+  height: 16px;
+  object-fit: cover;
+  border-radius: 3px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.location-text {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+/* Countdown Clock */
+.countdown-box {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(225, 6, 0, 0.25);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.countdown-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+}
+
+.countdown-digits {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.digit-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.digit-value {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  font-family: monospace, system-ui;
+  line-height: 1;
+}
+
+.digit-unit {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary);
+}
+
+.digit-colon {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.3);
+  margin-top: -0.65rem;
+}
+
+.race-concluded-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 0.85rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+}
+
+/* Circuit Vector SVG */
+.track-svg-container {
+  width: 100%;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.circuit-vector-svg {
+  width: 100%;
+  height: 100%;
+  max-height: 210px;
+  overflow: visible;
+}
+
+.track-path-glow {
+  fill: none;
+  stroke: rgba(225, 6, 0, 0.3);
+  stroke-width: 18;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: blur(6px);
+}
+
+.track-path-main {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.track-start-line {
+  stroke: var(--accent-primary);
+  stroke-width: 8;
+  stroke-linecap: round;
+}
+
+.track-meta-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 0.85rem;
+}
+
+.meta-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.1em;
+}
+
+.stat-val {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Schedule List */
+.session-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 3px solid var(--border-subtle);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.session-row:hover {
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateX(4px);
+}
+
+.session-row.session-gp {
+  background: rgba(225, 6, 0, 0.08);
+  border-color: rgba(225, 6, 0, 0.2);
+  border-left: 4px solid var(--accent-primary);
+}
+
+.session-row.session-sprint {
+  background: rgba(255, 140, 0, 0.08);
+  border-color: rgba(255, 140, 0, 0.25);
+  border-left: 4px solid #ff9100;
+}
+
+.session-row.session-sprint-q {
+  background: rgba(255, 214, 0, 0.06);
+  border-color: rgba(255, 214, 0, 0.2);
+  border-left: 4px solid var(--accent-warning);
+}
+
+.session-name-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.session-indicator {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+
+.indicator-sprint {
+  background: #ff9100;
+  box-shadow: 0 0 6px #ff9100;
+}
+
+.indicator-sprint-quali {
+  background: var(--accent-warning);
+  box-shadow: 0 0 6px var(--accent-warning);
+}
+
+.indicator-qualifying {
+  background: var(--accent-info);
+  box-shadow: 0 0 6px var(--accent-info);
+}
+
+.session-gp .session-indicator {
+  background: var(--accent-primary);
+  box-shadow: 0 0 6px var(--accent-primary);
+}
+
+.session-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+.session-times-group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+}
+
+.time-primary {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.time-secondary {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+  .race-info-grid {
+    grid-template-columns: 1fr;
+    padding: 1rem 1rem 2rem;
+  }
+}

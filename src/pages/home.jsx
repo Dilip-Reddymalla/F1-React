@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Header } from "../components/header";
 import "./home.css";
 import CountDown from "../components/countDown";
+import GlobeHeroTeaser from "../components/globeHeroTeaser";
 
 const cache = new Map();
 let postsPromise = null;
@@ -151,16 +153,23 @@ export function Home({ year }) {
               exclusive driver insights.
             </p>
             <div className="hero-cta-group">
+              <Link to="/globe" className="hero-btn globe-cta-btn">
+                <span className="cta-globe-icon">🌐</span> 3D World Tour
+              </Link>
               <a href="#latest-posts" className="hero-btn primary-btn">
                 Latest News
               </a>
               <a href="/standings" className="hero-btn secondary-btn">
-                View Standings
+                Standings
               </a>
             </div>
           </div>
           <div className="hero-timeline-row">
             <CountDown year={year} />
+          </div>
+
+          <div className="hero-teaser-row">
+            <GlobeHeroTeaser year={year} />
           </div>
         </section>
 

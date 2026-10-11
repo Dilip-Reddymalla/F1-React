@@ -1,0 +1,250 @@
+.season-strip-wrapper {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.season-strip-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.season-strip-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.strip-badge {
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(225, 6, 0, 0.14);
+  border: 1px solid rgba(225, 6, 0, 0.28);
+  color: var(--accent-primary);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.strip-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.strip-nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.strip-nav-btn {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.strip-nav-btn:hover {
+  border-color: var(--accent-primary);
+  background: rgba(225, 6, 0, 0.12);
+  color: #fff;
+}
+
+.season-strip-scroller {
+  display: flex;
+  align-items: stretch;
+  gap: 0.85rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 0.85rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-primary) transparent;
+}
+
+.season-strip-scroller::-webkit-scrollbar {
+  height: 4px;
+}
+
+.season-strip-scroller::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.season-strip-scroller::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 4px;
+}
+
+.race-pill-card {
+  flex: 0 0 190px;
+  scroll-snap-align: start;
+  background: linear-gradient(180deg, rgba(26, 26, 30, 0.94), rgba(15, 15, 18, 0.98));
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  padding: 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.race-pill-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.race-pill-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(225, 6, 0, 0.4);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+}
+
+.race-pill-card.active {
+  border-color: var(--accent-primary);
+  background: linear-gradient(180deg, rgba(32, 22, 24, 0.96), rgba(18, 14, 16, 0.98));
+  box-shadow: 0 12px 30px rgba(225, 6, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.race-pill-card.active::before {
+  background: var(--accent-primary);
+}
+
+.pill-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pill-round {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-secondary);
+  letter-spacing: 0.08em;
+}
+
+.status-pill {
+  font-size: 0.65rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  letter-spacing: 0.06em;
+}
+
+.status-pill.status-live {
+  background: rgba(0, 230, 118, 0.2);
+  color: var(--accent-success);
+  border: 1px solid rgba(0, 230, 118, 0.4);
+  animation: pulse 1.8s infinite;
+}
+
+.status-pill.status-next {
+  background: rgba(225, 6, 0, 0.2);
+  color: var(--accent-primary);
+  border: 1px solid rgba(225, 6, 0, 0.4);
+}
+
+.status-pill.status-done {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.status-pill.status-upcoming {
+  background: rgba(0, 176, 255, 0.12);
+  color: var(--accent-info);
+  border: 1px solid rgba(0, 176, 255, 0.25);
+}
+
+.pill-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pill-flag-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.pill-flag {
+  width: 20px;
+  height: 14px;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+.pill-locality {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pill-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pill-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.4rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.pill-date {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pill-track-code {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: var(--accent-primary);
+  letter-spacing: 0.05em;
+}
+
+@media (max-width: 768px) {
+  .season-strip-wrapper {
+    padding: 1rem 1rem 0.5rem;
+  }
+  .race-pill-card {
+    flex: 0 0 160px;
+  }
+}

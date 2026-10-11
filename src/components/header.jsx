@@ -25,6 +25,11 @@ export function Header() {
     <header className="navbar">
       <nav>
         <Link to="/">Home</Link>
+        <Link to="/globe" className="nav-globe-link">
+          <span className="nav-globe-icon">🌐</span>
+          <span>World Tour</span>
+          <span className="nav-3d-badge">3D</span>
+        </Link>
         <Link to="/drivers">Drivers</Link>
         <Link to="/teams">Teams</Link>
         <Link to="/races" id="pending">
