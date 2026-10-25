@@ -8,13 +8,17 @@ import GlobeHeroTeaser from "../components/globeHeroTeaser";
 const cache = new Map();
 let postsPromise = null;
 
-async function loadPosts() {
-  if (cache.has("f1_posts")) {
+async function loadPosts(force = false) {
+  if (force) {
+    cache.delete("f1_posts");
+    postsPromise = null;
+  } else if (cache.has("f1_posts")) {
     return cache.get("f1_posts");
   }
 
   if (!postsPromise) {
-    postsPromise = fetch("/api/posts")
+    const fetchUrl = force ? `/api/posts?t=${Date.now()}` : "/api/posts";
+    postsPromise = fetch(fetchUrl)
       .then(async (res) => {
         const contentType = res.headers.get("content-type") || "";
         const text = await res.text();
@@ -77,6 +81,8 @@ export function Home({ year }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [refreshNotice, setRefreshNotice] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -108,7 +114,7 @@ export function Home({ year }) {
     const handleAutoSync = () => {
       console.log("[Home] Post auto-synced! Refreshing posts feed...");
       cache.delete("f1_posts");
-      loadPosts()
+      loadPosts(true)
         .then((updated) => setPosts(updated))
         .catch(console.error);
     };
@@ -120,6 +126,42 @@ export function Home({ year }) {
       window.removeEventListener("f1:post-auto-synced", handleAutoSync);
     };
   }, []);
+
+  const handleRefreshPosts = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    setRefreshNotice(null);
+
+    try {
+      let syncMsg = "";
+      try {
+        const res = await fetch("/api/refresh-posts", { method: "POST" });
+        if (res.ok) {
+          const syncData = await res.json();
+          if (syncData.createdCount > 0) {
+            syncMsg = `✨ Synced ${syncData.createdCount} new post${syncData.createdCount > 1 ? "s" : ""}!`;
+          } else {
+            syncMsg = "✓ Feed is up to date";
+          }
+        }
+      } catch (syncErr) {
+        console.warn("[Home] Auto-refresh sync call failed:", syncErr.message);
+      }
+
+      const freshPosts = await loadPosts(true);
+      setPosts(freshPosts);
+      setCurrentPage(1);
+      setRefreshNotice(syncMsg || "✓ Feed refreshed");
+    } catch (err) {
+      console.error("[Home] Error refreshing posts:", err);
+      setRefreshNotice("⚠️ Could not refresh posts");
+    } finally {
+      setIsRefreshing(false);
+      setTimeout(() => {
+        setRefreshNotice(null);
+      }, 4000);
+    }
+  };
 
   const totalPages = Math.ceil(posts.length / POSTS_PER_PAGE);
   const paginatedPosts = posts.slice(
@@ -174,7 +216,32 @@ export function Home({ year }) {
         </section>
 
         <section className="latest-posts" id="latest-posts">
-          <h2>Latest Posts</h2>
+          <div className="posts-section-header">
+            <div className="posts-title-wrapper">
+              <h2>Latest Posts</h2>
+              <span className="posts-live-badge">Official Reports</span>
+            </div>
+            <div className="posts-header-actions">
+              {refreshNotice && (
+                <span className="refresh-notice-pill" role="status">
+                  {refreshNotice}
+                </span>
+              )}
+              <button
+                type="button"
+                className={`refresh-posts-btn ${isRefreshing ? "is-refreshing" : ""}`}
+                onClick={handleRefreshPosts}
+                disabled={isRefreshing}
+                title="Sync and refresh latest official session reports"
+                id="refresh-posts-btn"
+              >
+                <span className={`refresh-icon ${isRefreshing ? "spin" : ""}`}>
+                  ↻
+                </span>
+                <span>{isRefreshing ? "Syncing..." : "Refresh Posts"}</span>
+              </button>
+            </div>
+          </div>
           {loading && (
             <div className="loading-text">
               <p>Loading latest posts...</p>{" "}

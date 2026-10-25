@@ -39,6 +39,11 @@ let cachedPosts = null;
 let cachedAt = 0;
 const cacheTtlMs = 30 * 1000;
 
+export function clearPostsCache() {
+  cachedPosts = null;
+  cachedAt = 0;
+}
+
 export default async function handler(req, res) {
   try {
     const env = globalThis.process?.env ?? {};
@@ -47,19 +52,36 @@ export default async function handler(req, res) {
     // Query parameters
     let pageNum = NaN;
     let limitNum = NaN;
+    let shouldRefresh = false;
+
     try {
       const urlObj = new URL(req.url || "", "http://localhost");
       pageNum = parseInt(req.query?.page || urlObj.searchParams.get("page"), 10);
       limitNum = parseInt(req.query?.limit || urlObj.searchParams.get("limit"), 10);
+      shouldRefresh =
+        req.query?.refresh === "true" ||
+        urlObj.searchParams.get("refresh") === "true" ||
+        req.method === "POST";
     } catch {
       pageNum = parseInt(req.query?.page, 10);
       limitNum = parseInt(req.query?.limit, 10);
+      shouldRefresh = req.query?.refresh === "true" || req.method === "POST";
+    }
+
+    if (shouldRefresh) {
+      clearPostsCache();
+      try {
+        const { syncSessionPosts } = await import("../lib/autoPost/syncEngine.js");
+        await syncSessionPosts({ lookbackHours: 168 });
+      } catch (syncErr) {
+        console.warn("[api/posts] On-demand sync error:", syncErr.message);
+      }
     }
 
     const isPaginated = !isNaN(pageNum) && pageNum > 0 && !isNaN(limitNum) && limitNum > 0;
 
     // Use in-memory cache for default (unpaginated) fetch
-    if (!isPaginated && cachedPosts && now - cachedAt < cacheTtlMs) {
+    if (!shouldRefresh && !isPaginated && cachedPosts && now - cachedAt < cacheTtlMs) {
       res.setHeader("Cache-Control", "public, max-age=5, stale-while-revalidate=10");
       return res.status(200).json(cachedPosts);
     }

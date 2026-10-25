@@ -1,51 +1,112 @@
+
+/* ==========================================================================
+   Header & Navigation Bar Styles
+   ========================================================================== */
+
 .navbar {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 64px;
+  background: rgba(14, 14, 17, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  z-index: 1000;
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.navbar.solid {
+  background: rgba(10, 10, 13, 0.96);
+  border-bottom-color: rgba(255, 24, 1, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.navbar.menu-open {
+  z-index: 99999;
+}
+
+.navbar-container {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem;
-  background: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  width: 100%;
+  max-width: 1400px;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  position: relative;
+  z-index: 10000;
 }
 
-.navbar nav {
+/* F1 Logo */
+.logo {
   display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo img {
+  height: 32px;
+  width: auto;
+  display: block;
+  transition: transform 0.2s ease;
+}
+
+.logo:hover img {
+  transform: scale(1.04);
+}
+
+/* Desktop Navigation Menu */
+.desktop-nav {
+  display: flex;
+  align-items: center;
   gap: 1.5rem;
 }
 
-.navbar nav a {
-  color: var(--text-secondary);
+.nav-link {
+  color: var(--text-secondary, #a1a1aa);
   text-decoration: none;
   font-weight: 500;
+  font-size: 0.92rem;
+  letter-spacing: 0.02em;
   position: relative;
+  padding: 0.35rem 0.15rem;
+  transition: color 0.2s ease;
 }
 
-.navbar nav a::after {
+.nav-link::after {
   content: "";
   position: absolute;
-  bottom: -4px;
+  bottom: -2px;
   left: 0;
   width: 0;
   height: 2px;
-  background: var(--text-primary);
-  transition: width 0.2s ease;
+  background: #ff1801;
+  transition: width 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 2px;
 }
 
-.navbar nav a:hover {
-  color: var(--text-primary);
+.nav-link:hover {
+  color: #ffffff;
 }
-.navbar nav a:hover::after {
+
+.nav-link:hover::after,
+.nav-link.active::after {
   width: 100%;
 }
 
+.nav-link.active {
+  color: #ffffff;
+  font-weight: 600;
+}
+
 /* 3D World Tour Globe Link Styling */
-.navbar nav a.nav-globe-link {
+.nav-globe-link {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  color: #ff3b30;
+  color: #ff3b30 !important;
 }
 
 .nav-globe-icon {
@@ -72,67 +133,304 @@
   text-transform: uppercase;
 }
 
-
-.navbar.solid {
-  background-color: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: background-color 0.3s ease, backdrop-filter 0.3s ease;
-  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+/* Hamburger Button (Hidden on Desktop) */
+.hamburger-btn {
+  display: none;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 44px;
+  height: 42px;
+  padding: 11px 9px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
-.logo img {
-  height: 36px;
+.hamburger-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 24, 1, 0.5);
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
+.hamburger-btn:active {
+  transform: scale(0.95);
+}
+
+.hamburger-bar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background: #ffffff;
+  border-radius: 2px;
+  pointer-events: none;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  transform-origin: center;
+}
+
+/* Hamburger Active / Close (✕) State */
+.hamburger-btn.active .hamburger-bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger-btn.active .hamburger-bar:nth-child(2) {
+  opacity: 0;
+  transform: scaleX(0);
+}
+
+.hamburger-btn.active .hamburger-bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+/* Mobile Nav Overlay & Drawer (Hidden on Desktop) */
+.mobile-nav-overlay {
+  display: none;
+}
+
+/* Body lock when mobile nav is open */
+body.nav-open-lock {
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   Mobile Responsive Navigation (<= 820px)
+   ========================================================================== */
+
+@media (max-width: 820px) {
   .navbar {
-    padding: 0.75rem 1rem;
+    height: 58px;
   }
 
-  .navbar nav {
-    gap: 0.75rem;
-  }
-
-  .navbar nav a {
-    font-size: 0.9rem;
+  .navbar-container {
+    padding: 0 1rem;
   }
 
   .logo img {
-    height: 28px;
+    height: 26px;
   }
 
-  .navbar.solid {
-    transition: background-color 0.5s ease;
-    background-color: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+  .desktop-nav {
+    display: none;
+  }
+
+  .hamburger-btn {
+    display: flex;
+  }
+
+  /* Mobile Overlay Container (starts below navbar so hamburger is never blocked) */
+  .mobile-nav-overlay {
+    display: flex;
+    position: fixed;
+    top: 58px;
+    left: 0;
+    width: 100vw;
+    height: calc(100dvh - 58px);
+    z-index: 9999;
+    justify-content: flex-end;
+    pointer-events: none;
+    visibility: hidden;
+    transition: visibility 0.25s ease;
+  }
+
+  .mobile-nav-overlay.open {
+    pointer-events: auto;
+    visibility: visible;
+  }
+
+  /* Dark Backdrop */
+  .mobile-nav-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    opacity: 0;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: opacity 0.25s ease;
+    z-index: 1;
+  }
+
+  .mobile-nav-overlay.open .mobile-nav-backdrop {
+    opacity: 1;
+  }
+
+  /* Slide-out Mobile Navigation Drawer */
+  .mobile-nav-drawer {
+    position: relative;
+    z-index: 2;
+    width: min(85vw, 320px);
+    height: 100%;
+    background: linear-gradient(180deg, #15151a 0%, #0c0c0f 100%);
+    border-left: 1px solid rgba(255, 24, 1, 0.3);
+    box-shadow: -15px 0 50px rgba(0, 0, 0, 0.85);
+    display: flex;
+    flex-direction: column;
+    padding: 1.15rem 1rem 1.5rem;
+    transform: translateX(100%);
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+
+  .mobile-nav-overlay.open .mobile-nav-drawer {
+    transform: translateX(0);
+  }
+
+  /* Drawer Header */
+  .mobile-nav-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 1.15rem;
+    margin-bottom: 0.85rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .mobile-drawer-logo {
+    height: 22px;
+    width: auto;
+  }
+
+  .mobile-nav-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .mobile-nav-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-nav-close-btn:hover {
+    background: rgba(255, 24, 1, 0.2);
+    border-color: #ff1801;
+    color: #ff1801;
+  }
+
+  .mobile-nav-close-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Links List */
+  .mobile-nav-links {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  .mobile-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    width: 100%;
+    min-height: 48px;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: #e4e4e7;
+    text-decoration: none;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+  }
+
+  .nav-item-icon {
+    font-size: 1.15rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .mobile-nav-link:hover,
+  .mobile-nav-link:active {
+    background: rgba(255, 24, 1, 0.12);
+    border-color: rgba(255, 24, 1, 0.35);
+    color: #ffffff;
+    transform: translateX(3px);
+  }
+
+  .mobile-nav-link.active {
+    background: rgba(255, 24, 1, 0.18);
+    border-color: #ff1801;
+    color: #ffffff;
+    box-shadow: 0 0 16px rgba(255, 24, 1, 0.2);
+  }
+
+  .mobile-nav-link .nav-3d-badge {
+    margin-left: auto;
+  }
+
+  /* Drawer Footer */
+  .mobile-nav-footer {
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-nav-dismiss-btn {
+    width: 100%;
+    min-height: 44px;
+    padding: 0.65rem 1rem;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #a1a1aa;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s ease;
+  }
+
+  .mobile-nav-dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
   }
 }
 
-@media (max-width: 480px) {
-  .navbar {
-    padding: 0.5rem 0.75rem;
-  }
-
-  .navbar nav {
-    gap: 0.5rem;
-  }
-
-  .navbar nav a {
-    font-size: 0.8rem;
+@media (max-width: 380px) {
+  .navbar-container {
+    padding: 0 0.75rem;
   }
 
   .logo img {
     height: 24px;
   }
-  .navbar.solid {
-    transition: background-color 0.5s ease;
-    background-color: rgba(0, 0, 0, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.15);
+
+  .mobile-nav-drawer {
+    width: 90vw;
+    padding: 1rem 0.75rem 1.25rem;
+  }
+
+  .mobile-nav-link {
+    font-size: 0.95rem;
+    padding: 0.65rem 0.85rem;
   }
 }
