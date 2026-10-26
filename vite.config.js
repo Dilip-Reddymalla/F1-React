@@ -40,6 +40,31 @@ function localApiPostsPlugin() {
     configureServer(server) {
       server.middlewares.use(async (req, res, next) => {
         const path = req.url?.split("?")[0];
+        if (path === "/api/refresh-posts") {
+          if (!res.status) {
+            res.status = (code) => {
+              res.statusCode = code;
+              return res;
+            };
+          }
+          if (!res.json) {
+            res.json = (payload) => {
+              res.setHeader("Content-Type", "application/json; charset=utf-8");
+              res.end(JSON.stringify(payload));
+              return res;
+            };
+          }
+
+          try {
+            const { default: refreshHandler } = await import("./api/refresh-posts.js");
+            await refreshHandler(req, res);
+          } catch (error) {
+            console.error("Local refresh-posts handler error:", error);
+            res.status(500).json({ error: error.message });
+          }
+          return;
+        }
+
         if (path === "/api/cron/auto-post") {
           if (!res.status) {
             res.status = (code) => {
