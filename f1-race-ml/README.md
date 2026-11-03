@@ -67,7 +67,15 @@ npm run dev     # ONE command: provisions Python/venv/requirements, then starts
    (winget / brew / apt-get).
 2. Creates the `.venv` if needed.
 3. Installs `requirements.txt` if missing or changed (tracked by a hash stamp).
-4. Starts the FastAPI and Vite together, and stops both on Ctrl-C.
+4. **Bootstraps the models** — the trained model files are not committed (the
+   DNF model is ~80 MB, over GitHub's limit), so on the first run it fetches
+   data from the Jolpica API and trains all models (one-time, a few minutes).
+   Later runs skip this instantly.
+5. Starts the FastAPI and Vite together, and stops both on Ctrl-C.
+
+If a model is ever missing, the API reports it cleanly:
+`GET /health` returns `models_ready: false`, and `/predict/engine` returns a
+`503` with instructions until the models are generated.
 
 Convenience aliases: `npm run dev:web` (Vite only), `npm run dev:api`
 (ML API only). If the ML API is not running, the page automatically falls back

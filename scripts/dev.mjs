@@ -124,6 +124,28 @@ function provision() {
   const py = ensurePython();
   ensureVenv(py);
   ensureReqs();
+  ensureModels(py);
+}
+
+// The trained model files are intentionally not committed (the DNF model is
+// ~80 MB, above GitHub's limit). If they are missing, we generate them now by
+// fetching data + retraining. This is a one-time cost on first run.
+function ensureModels(py) {
+  const dnfModel = path.join(mlDir, "models", "dnf_model", "logistic_regression.joblib");
+  if (fs.existsSync(dnfModel)) {
+    log("Trained models already present.");
+    return;
+  }
+  log("Trained models not found. Fetching data + training (one-time, can take a few minutes)...");
+  const r = spawnSync(py.cmd, [...py.extArgs, "src/models/retrain.py", "--fetch"], {
+    cwd: mlDir,
+    stdio: "inherit",
+    timeout: 1800000, // 30 min
+  });
+  if (r.status !== 0 || !fs.existsSync(dnfModel)) {
+    throw new Error("Model bootstrap failed. Run manually: ./.venv/Scripts/python.exe src/models/retrain.py --fetch");
+  }
+  log("Models trained and ready.");
 }
 
 // ---------------------------------------------------------------------------

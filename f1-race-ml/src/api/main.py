@@ -27,7 +27,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 import threading
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -42,7 +42,7 @@ def _root():
 ROOT = _root()
 sys.path.insert(0, str(ROOT))
 
-from config import RETRAIN_POLL_SECONDS  # noqa: E402
+from config import RETRAIN_POLL_SECONDS, DNF_MODEL_FILE, RANKING_MODEL_FILE, QUALI_MODEL_FILE  # noqa: E402
 from src.data.fetch_latest import get_current_season, next_race, refresh_latest  # noqa: E402
 from src.models.dnf.predict_dnf import run_prediction                            # noqa: E402
 from src.models.ranking.predict_ranking import run_prediction as run_engine_prediction  # noqa: E402
@@ -63,6 +63,11 @@ def _refresh_engine_cache():
 def _invalidate_engine_cache():
     _engine_cache["key"] = None
     _engine_cache["result"] = None
+
+
+def models_ready():
+    """True if all trained model files exist (they are generated on first run)."""
+    return all(p.exists() for p in (DNF_MODEL_FILE, RANKING_MODEL_FILE, QUALI_MODEL_FILE))
 
 
 def _run_retrain_scheduler():
@@ -115,7 +120,7 @@ class PredictRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "f1-dnf-prediction"}
+    return {"status": "ok", "service": "f1-dnf-prediction", "models_ready": models_ready()}
 
 
 @app.get("/next-race")
@@ -159,6 +164,12 @@ def predict_engine_endpoint():
     Cached by upcoming race so the heavy first compute is only done once
     (it is also pre-warmed at startup).
     """
+    if not models_ready():
+        raise HTTPException(
+            status_code=503,
+            detail="Models not trained yet. Run `npm run dev` (auto-bootstraps) "
+                   "or `python src/models/retrain.py --fetch`.",
+        )
     season, races = get_current_season()
     nr = next_race(season, races)
     key = (nr["season"], nr["round"]) if nr else None
