@@ -139,6 +139,16 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     middlewareMode: false,
+    // Proxy ML API calls to the local FastAPI service (same-origin from the
+    // browser's point of view, so no CORS issues). The FastAPI runs on
+    // http://127.0.0.1:8000 (see `npm run dev:all`).
+    proxy: {
+      "/ml": {
+        target: "http://127.0.0.1:8000",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ml/, ""),
+      },
+    },
   },
   preview: {
     host: "0.0.0.0",

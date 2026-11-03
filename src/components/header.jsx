@@ -101,6 +101,13 @@ export function Header() {
           >
             Standings
           </Link>
+          <Link
+            to="/predictions"
+            className={`nav-link nav-globe-link ${location.pathname === "/predictions" ? "active" : ""}`}
+          >
+            <span>Predict</span>
+            <span className="nav-3d-badge">ML</span>
+          </Link>
         </nav>
 
         {/* Mobile Hamburger Button */}
@@ -191,6 +198,15 @@ export function Header() {
             >
               <span className="nav-item-icon">🏆</span>
               <span>Standings</span>
+            </Link>
+            <Link
+              to="/predictions"
+              onClick={closeMenu}
+              className={`mobile-nav-link ${location.pathname === "/predictions" ? "active" : ""}`}
+            >
+              <span className="nav-item-icon">🔮</span>
+              <span>Predict</span>
+              <span className="nav-3d-badge">ML</span>
             </Link>
           </div>
 

@@ -31,3 +31,14 @@ PROJECT_DOCUMENTATION.md
 
 .vercel
 .env*.local
+
+
+.venv*
+
+# Python bytecode
+__pycache__/
+*.pyc
+
+# F1 ML generated artifacts (re-generate from the Jolpica API)
+f1-race-ml/data/
+f1-race-ml/models/

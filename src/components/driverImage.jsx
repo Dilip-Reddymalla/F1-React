@@ -12,7 +12,7 @@ function getDriverFromWikiUrl(url) {
 
 const imageCache = new Map();
 
-export function DriverImage({ givenName, familyName, url }) {
+export function DriverImage({ givenName, familyName, url, imgClassName = "driver-photo" }) {
   const [src, setSrc] = useState(f1);
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export function DriverImage({ givenName, familyName, url }) {
     <img
       src={src}
       alt={`${givenName} ${familyName}`}
-      className="driver-photo"
+      className={imgClassName}
       onError={(e) => {
         e.currentTarget.src = f1;
       }}

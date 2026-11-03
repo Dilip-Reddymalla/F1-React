@@ -1,0 +1,149 @@
+"""Unified prediction for the next race: DNF + ranking → Monte Carlo engine.
+
+This is the integration point of the whole pipeline. It produces, for each
+driver in the next race:
+
+    dnf_probability      P(the driver does not finish)
+    expected_finish      predicted finishing position among finishers
+    expected_rank        predicted overall position (DNF counted as last)
+    win_probability      P(P1) from the Monte Carlo engine
+    positions            the full P1..P20 distribution (engine output)
+
+The engine ensures the outputs are a *coherent* race: exactly one winner, and
+positions only go to drivers who finish.
+
+Run:
+    python src/models/ranking/predict_ranking.py
+"""
+import json
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import joblib
+
+
+def _root():
+    for p in Path(__file__).resolve().parents:
+        if (p / "config.py").exists():
+            return p
+    raise RuntimeError("Could not locate project root")
+
+
+ROOT = _root()
+sys.path.insert(0, str(ROOT))
+
+from config import (DNF_DATASET_CSV, RACE_RESULTS_CSV, DNF_MODEL_FILE,  # noqa: E402
+                    RANKING_MODEL_FILE, RACE_ENGINE_FILE)
+from src.data.fetch_latest import (get_current_season, next_race,           # noqa: E402
+                                   latest_completed_entries)
+from src.features.build_features import (compute_features,                 # noqa: E402
+                                         FEATURE_COLUMNS, RANKING_FEATURES)
+from src.simulation.race_simulator import monte_carlo, summarize_engine    # noqa: E402
+
+
+def build_placeholder_rows(entries, race):
+    rows = []
+    for e in entries:
+        rows.append({
+            "season": race["season"],
+            "round": race["round"],
+            "race": race["race"],
+            "date": race["date"],
+            "circuit": race["circuit"],
+            "driver": e["driver"],
+            "driver_id": e["driver_id"],
+            "constructor": e["constructor"],
+            "grid": np.nan,       # unknown before qualifying
+            "dnf": np.nan,
+        })
+    return pd.DataFrame(rows)
+
+
+def run_prediction(refresh=False):
+    season, races = get_current_season()
+    race = next_race(season, races)
+    if race is None:
+        raise RuntimeError("No upcoming race found on the calendar.")
+
+    entries, last_race = latest_completed_entries(season)
+    if not entries:
+        raise RuntimeError("No completed race available to build the entry list.")
+
+    dataset = pd.read_csv(DNF_DATASET_CSV)
+    raw = pd.read_csv(RACE_RESULTS_CSV)
+    placeholders = build_placeholder_rows(entries, race)
+    full = pd.concat([dataset, placeholders], ignore_index=True)
+    featured = compute_features(full, raw)
+    pred_rows = featured[featured["dnf"].isna()].copy().reset_index(drop=True)
+
+    # DNF model → P(DNF)
+    dnf_model = joblib.load(DNF_MODEL_FILE)
+    p_dnf = dnf_model.predict_proba(pred_rows[FEATURE_COLUMNS])[:, 1]
+
+    # Ranking model → expected finishing position (strength)
+    rank_model = joblib.load(RANKING_MODEL_FILE)
+    exp_finish = rank_model.predict(pred_rows[RANKING_FEATURES])
+
+    # Monte Carlo engine → coherent race distribution
+    engine = monte_carlo(pred_rows["driver"].tolist(), p_dnf, exp_finish,
+                         n_sims=10000)
+
+    by_driver = {r["driver"]: r for r in engine}
+    predictions = []
+    for i, row in pred_rows.iterrows():
+        d = by_driver[row["driver"]]
+        predictions.append({
+            "driver": row["driver"],
+            "constructor": row["constructor"],
+            "dnf_probability": d["dnf_prob"],
+            "expected_finish": d["expected_finish"],
+            "expected_rank": d["expected_rank"],
+            "winner_probability": d["win_prob"],
+            "positions": d["positions"],
+        })
+
+    # Rank by overall expected rank (P1 first).
+    predictions.sort(key=lambda p: p["expected_rank"])
+
+    result = {
+        "race": race["race"],
+        "season": race["season"],
+        "round": race["round"],
+        "date": race["date"],
+        "circuit": race["circuit"],
+        "entry_source": f"{last_race['raceName']} results (proxy entry list)",
+        "stage": "pre-qualifying (grid imputed)",
+        "engine": "Monte Carlo (10,000 simulations)",
+        "predictions": predictions,
+    }
+
+    RACE_ENGINE_FILE.write_text(json.dumps(result, indent=2))
+    return result
+
+
+def print_result(result):
+    print("\n" + "=" * 78)
+    print(f"  RACE ENGINE — {result['race']} (Round {result['round']}, Season {result['season']})")
+    print(f"  {result['date']}  |  {result['circuit']}")
+    print(f"  Stage: {result['stage']}  |  {result['engine']}")
+    print("=" * 78)
+    print(f"{'#':<3}{'Driver':<21}{'Exp Rank':>9}{'Win%':>7}{'DNF%':>7}{'P1':>6}{'P2':>6}{'P3':>6}")
+    print("-" * 78)
+    for i, p in enumerate(result["predictions"], 1):
+        pos = p["positions"]
+        print(f"{i:<3}{p['driver']:<21}"
+              f"{p['expected_rank']:>9.2f}"
+              f"{p['winner_probability']:>6.1%}"
+              f"{p['dnf_probability']:>6.1%}"
+              f"{pos.get('P1',0):>6.1%}"
+              f"{pos.get('P2',0):>6.1%}"
+              f"{pos.get('P3',0):>6.1%}")
+    print("-" * 78)
+    print(f"Saved -> {RACE_ENGINE_FILE}")
+
+
+if __name__ == "__main__":
+    result = run_prediction()
+    print_result(result)

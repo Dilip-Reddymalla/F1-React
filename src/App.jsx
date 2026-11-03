@@ -6,6 +6,7 @@ import Races from "./pages/races";
 import { TeamDetails } from "./pages/teams";
 import { Standings } from "./pages/standings";
 import GlobeTour from "./pages/globeTour";
+import Predictions from "./pages/predictions";
 import { SplashScreen } from "./components/splashScreen";
 import "./App.css";
 
@@ -21,6 +22,7 @@ function App() {
         <Route path='/teams' element={<TeamDetails year={year} setYear={setYear} />} />
         <Route path='/races' element={<Races year={year} setYear={setYear} />} />
         <Route path='/standings' element={<Standings year={year} setYear={setYear} />} />
+        <Route path='/predictions' element={<Predictions />} />
       </Routes>
 
     </>
