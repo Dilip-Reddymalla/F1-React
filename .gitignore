@@ -39,6 +39,7 @@ PROJECT_DOCUMENTATION.md
 __pycache__/
 *.pyc
 
-# F1 ML generated artifacts (re-generate from the Jolpica API)
-f1-race-ml/data/
+# F1 ML generated artifacts. The trained model files (up to ~80 MB) are
+# generated on first boot and are NOT committed. The small dataset CSVs
+# (~2.3 MB) ARE committed so training works offline on a fresh deploy.
 f1-race-ml/models/

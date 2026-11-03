@@ -1,0 +1,166 @@
+{
+  "race": "Brazilian Grand Prix",
+  "season": 2026,
+  "round": 20,
+  "date": "2026-11-08",
+  "circuit": "Aut\u00f3dromo Jos\u00e9 Carlos Pace",
+  "entry_source": "Mexico City Grand Prix results (proxy entry list)",
+  "stage": "pre-qualifying (grid imputed)",
+  "model": "Ranking (LinearRegression)",
+  "predicted_order": [
+    {
+      "predicted_position": 6,
+      "driver": "Andrea Kimi Antonelli",
+      "constructor": "Mercedes",
+      "expected_position": 5.53,
+      "provisional_p1": 0.2572
+    },
+    {
+      "predicted_position": 6,
+      "driver": "Max Verstappen",
+      "constructor": "Red Bull",
+      "expected_position": 6.03,
+      "provisional_p1": 0.2001
+    },
+    {
+      "predicted_position": 7,
+      "driver": "Lewis Hamilton",
+      "constructor": "Ferrari",
+      "expected_position": 7.47,
+      "provisional_p1": 0.0974
+    },
+    {
+      "predicted_position": 7,
+      "driver": "Charles Leclerc",
+      "constructor": "Ferrari",
+      "expected_position": 7.3,
+      "provisional_p1": 0.1063
+    },
+    {
+      "predicted_position": 8,
+      "driver": "Lando Norris",
+      "constructor": "McLaren",
+      "expected_position": 8.23,
+      "provisional_p1": 0.0667
+    },
+    {
+      "predicted_position": 8,
+      "driver": "George Russell",
+      "constructor": "Mercedes",
+      "expected_position": 8.07,
+      "provisional_p1": 0.0722
+    },
+    {
+      "predicted_position": 9,
+      "driver": "Oscar Piastri",
+      "constructor": "McLaren",
+      "expected_position": 8.66,
+      "provisional_p1": 0.0538
+    },
+    {
+      "predicted_position": 10,
+      "driver": "Isack Hadjar",
+      "constructor": "Red Bull",
+      "expected_position": 9.73,
+      "provisional_p1": 0.0316
+    },
+    {
+      "predicted_position": 11,
+      "driver": "Franco Colapinto",
+      "constructor": "Alpine F1 Team",
+      "expected_position": 11.39,
+      "provisional_p1": 0.0137
+    },
+    {
+      "predicted_position": 11,
+      "driver": "Liam Lawson",
+      "constructor": "RB F1 Team",
+      "expected_position": 10.58,
+      "provisional_p1": 0.0206
+    },
+    {
+      "predicted_position": 12,
+      "driver": "Arvid Lindblad",
+      "constructor": "RB F1 Team",
+      "expected_position": 11.62,
+      "provisional_p1": 0.0123
+    },
+    {
+      "predicted_position": 12,
+      "driver": "Oliver Bearman",
+      "constructor": "Haas F1 Team",
+      "expected_position": 12.08,
+      "provisional_p1": 0.0098
+    },
+    {
+      "predicted_position": 12,
+      "driver": "Pierre Gasly",
+      "constructor": "Alpine F1 Team",
+      "expected_position": 11.64,
+      "provisional_p1": 0.0121
+    },
+    {
+      "predicted_position": 12,
+      "driver": "Nico H\u00fclkenberg",
+      "constructor": "Audi",
+      "expected_position": 12.47,
+      "provisional_p1": 0.008
+    },
+    {
+      "predicted_position": 13,
+      "driver": "Alexander Albon",
+      "constructor": "Williams",
+      "expected_position": 13.38,
+      "provisional_p1": 0.0051
+    },
+    {
+      "predicted_position": 13,
+      "driver": "Fernando Alonso",
+      "constructor": "Aston Martin",
+      "expected_position": 12.66,
+      "provisional_p1": 0.0073
+    },
+    {
+      "predicted_position": 13,
+      "driver": "Gabriel Bortoleto",
+      "constructor": "Audi",
+      "expected_position": 12.85,
+      "provisional_p1": 0.0066
+    },
+    {
+      "predicted_position": 13,
+      "driver": "Ryo Hirakawa",
+      "constructor": "Haas F1 Team",
+      "expected_position": 13.36,
+      "provisional_p1": 0.0051
+    },
+    {
+      "predicted_position": 14,
+      "driver": "Carlos Sainz",
+      "constructor": "Williams",
+      "expected_position": 13.6,
+      "provisional_p1": 0.0045
+    },
+    {
+      "predicted_position": 14,
+      "driver": "Lance Stroll",
+      "constructor": "Aston Martin",
+      "expected_position": 13.61,
+      "provisional_p1": 0.0045
+    },
+    {
+      "predicted_position": 15,
+      "driver": "Valtteri Bottas",
+      "constructor": "Cadillac F1 Team",
+      "expected_position": 15.17,
+      "provisional_p1": 0.0021
+    },
+    {
+      "predicted_position": 15,
+      "driver": "Sergio P\u00e9rez",
+      "constructor": "Cadillac F1 Team",
+      "expected_position": 14.54,
+      "provisional_p1": 0.0028
+    }
+  ]
+}

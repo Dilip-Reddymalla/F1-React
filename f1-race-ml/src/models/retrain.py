@@ -108,11 +108,19 @@ def bootstrap_models(fetch: bool = True):
     """Ensure models exist, training only when needed.
 
     Used as the server start step so a fresh host self-heals (builds models on
-    first boot) without re-training on every restart.
+    first boot) without re-training on every restart. If the live fetch fails
+    (e.g. network), we still train from the committed dataset so the deploy
+    does not fail.
     """
     if models_ready() and not needs_retrain():
         return {"status": "up-to-date", "trained": False}
-    return retrain_all(fetch=fetch)
+    try:
+        return retrain_all(fetch=fetch)
+    except Exception as exc:  # noqa: BLE001
+        if models_ready():
+            print(f"[bootstrap] live fetch failed ({exc}); training on committed data")
+            return retrain_all(fetch=False)
+        raise
 
 
 def _best_model(meta_path, default):
@@ -204,6 +212,8 @@ def retrain_all(fetch: bool = False):
 
 if __name__ == "__main__":
     if "--bootstrap" in sys.argv:
-        print(json.dumps(bootstrap_models(fetch="--fetch" in sys.argv), indent=2))
+        # Bootstrap fetches new data by default (--no-fetch to disable).
+        print(json.dumps(
+            bootstrap_models(fetch="--no-fetch" not in sys.argv), indent=2))
     else:
         retrain_all(fetch="--fetch" in sys.argv)
