@@ -105,10 +105,20 @@ app = FastAPI(title="F1 DNF Prediction API", version="0.1.0", lifespan=lifespan)
 # Keyed by (season, round) of the upcoming race; cleared on /refresh.
 _engine_cache = {"key": None, "result": None}
 
-# Allow the Vite dev server to call this API during development.
+# Allow origins: dev + anything passed via PREDICT_ALLOW_ORIGINS
+# (comma-separated, e.g. "https://f1-react.vercel.app,https://mysite.com").
+ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+for _o in os.environ.get("PREDICT_ALLOW_ORIGINS", "").split(","):
+    _o = _o.strip()
+    if _o and _o not in ALLOWED_ORIGINS:
+        ALLOWED_ORIGINS.append(_o)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
 )
