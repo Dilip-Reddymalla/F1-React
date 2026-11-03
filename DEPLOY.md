@@ -38,20 +38,21 @@ to the committed snapshot (`public/predictions/race_engine.json`) otherwise.
 2. Render → **New → Web Service** → connect that repo/folder.
 3. Settings:
    - **Runtime:** Python 3 (Render installs `requirements.txt` automatically).
-   - **Start command:** `uvicorn src.api.main:app --host 0.0.0.0 --port $PORT`
-     (this is also in the committed `Procfile`, which Render honours).
+   - **Start command:** the committed `Procfile` already runs the model bootstrap
+     then starts uvicorn:
+     ```bash
+     bash -c "python src/models/retrain.py --bootstrap && uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"
+     ```
+     This **auto-generates the models on first boot** (fetching data from the
+     Jolpica API), then skips training on later restarts unless a new race
+     completed. The first deploy may take a few minutes to build the models.
    - **Environment:** `PREDICT_ALLOW_ORIGINS = https://<your-vercel-app>.vercel.app`
      (comma-separated if multiple origins; the local dev origins are always allowed).
-4. **Bootstrap the models (one-time).** The trained model files are *not* committed
-   (the DNF model is ~80 MB). Generate them once:
+4. *(Optional)* Run the bootstrap once manually, e.g. to verify / warm up:
    - Render → your service → **Shell**, then run:
      ```bash
      python src/models/retrain.py --fetch
      ```
-   - This downloads results from the Jolpica API and trains all models.
-   - Alternative: leave it to the API — on first boot, if models are missing, the
-     background scheduler fetches and trains automatically (so the first requests
-     may return `503` with guidance until training finishes; after that it's fast).
 
 ---
 

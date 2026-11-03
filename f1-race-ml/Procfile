@@ -1,3 +1,4 @@
 # Render / Fly.io / Railway start command for the F1 ML FastAPI.
-# The JS service listens on $PORT (Render/Railway/Fly set it automatically).
-web: uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# - Bootstraps the models first (builds them on first boot, skips when current).
+# - Then starts uvicorn on $PORT (Render/Railway/Fly set it automatically).
+web: bash -c "python src/models/retrain.py --bootstrap && uvicorn src.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"

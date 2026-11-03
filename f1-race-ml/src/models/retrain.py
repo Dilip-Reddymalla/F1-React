@@ -96,6 +96,25 @@ def needs_retrain():
     return (stamp["max_season"], stamp["max_round"]) != latest
 
 
+MODEL_FILES = [DNF_MODEL_FILE, RANKING_MODEL_FILE, QUALI_MODEL_FILE]
+
+
+def models_ready():
+    """True if all three trained model files exist."""
+    return all(p.exists() for p in MODEL_FILES)
+
+
+def bootstrap_models(fetch: bool = True):
+    """Ensure models exist, training only when needed.
+
+    Used as the server start step so a fresh host self-heals (builds models on
+    first boot) without re-training on every restart.
+    """
+    if models_ready() and not needs_retrain():
+        return {"status": "up-to-date", "trained": False}
+    return retrain_all(fetch=fetch)
+
+
 def _best_model(meta_path, default):
     if meta_path.exists():
         try:
@@ -184,4 +203,7 @@ def retrain_all(fetch: bool = False):
 
 
 if __name__ == "__main__":
-    retrain_all(fetch="--fetch" in sys.argv)
+    if "--bootstrap" in sys.argv:
+        print(json.dumps(bootstrap_models(fetch="--fetch" in sys.argv), indent=2))
+    else:
+        retrain_all(fetch="--fetch" in sys.argv)
