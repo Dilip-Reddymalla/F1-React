@@ -129,14 +129,23 @@ _engine_cache = {"key": None, "result": None}
 
 # Allow origins: dev + anything passed via PREDICT_ALLOW_ORIGINS
 # (comma-separated, e.g. "https://f1-react.vercel.app,https://mysite.com").
+# Origins are normalized (trimmed, trailing slash stripped, lowercased) so a
+# small paste mismatch (e.g. a trailing "/") cannot silently block the browser.
+def _normalize_origin(o):
+    o = o.strip().rstrip("/")
+    return o.lower() if o.lower().startswith("http") else o
+
+
 ALLOWED_ORIGINS = [
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
+    _normalize_origin("http://localhost:5173"),
+    _normalize_origin("http://127.0.0.1:5173"),
 ]
 for _o in os.environ.get("PREDICT_ALLOW_ORIGINS", "").split(","):
-    _o = _o.strip()
+    _o = _normalize_origin(_o)
     if _o and _o not in ALLOWED_ORIGINS:
         ALLOWED_ORIGINS.append(_o)
+
+print(f"[startup] Allowed CORS origins: {ALLOWED_ORIGINS}")
 
 app.add_middleware(
     CORSMiddleware,
