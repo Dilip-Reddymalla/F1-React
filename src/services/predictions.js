@@ -57,11 +57,12 @@ export async function fetchRaceEngine(mode = "auto") {
   return { source: "snapshot", data };
 }
 
-/** Compare predicted vs ACTUAL results for the most recent completed races. */
+/** Compare predicted vs ACTUAL results for the most recent completed races.
+ *  First compute trains models, so allow a long timeout (server caches after). */
 export async function fetchRecentComparison(races = 6) {
   const base = apiBase();
   const url = `${base}/compare/recent?races=${races}`;
-  const data = await fetchJson(url, {}, 60000);
+  const data = await fetchJson(url, {}, 150000);
   if (!data || !Array.isArray(data.races)) {
     throw new Error("Comparison data unavailable");
   }

@@ -218,14 +218,13 @@ body.nav-open-lock {
     display: flex;
   }
 
-  /* Mobile Overlay Container (starts below navbar so hamburger is never blocked) */
+  /* Mobile Overlay Container (starts below navbar so hamburger is never blocked).
+     Acts as the full-screen backdrop layer; the drawer is itself position:fixed
+     so it is never dependent on flex sizing (fixes half/sliver rendering). */
   .mobile-nav-overlay {
-    display: flex;
     position: fixed;
-    inset: 58px 0 0 0;   /* top/right/bottom/left — full remaining screen, no dvh dependency */
+    inset: 58px 0 0 0;
     z-index: 9999;
-    justify-content: flex-end;
-    align-items: stretch;
     pointer-events: none;
     visibility: hidden;
     transition: visibility 0.25s ease;
@@ -254,17 +253,15 @@ body.nav-open-lock {
     opacity: 1;
   }
 
-  /* Slide-out Mobile Navigation Drawer */
+  /* Slide-out Mobile Navigation Drawer — pinned, full-height, independent */
   .mobile-nav-drawer {
-    position: relative;
-    z-index: 2;
-    flex: 0 0 auto;
-    width: min(85vw, 320px);
-    max-width: 320px;
-    min-width: 0;
-    height: 100%;
-    max-height: 100%;
-    margin-left: auto;     /* pin to right edge regardless of justify-content */
+    position: fixed;
+    top: 58px;
+    right: 0;
+    bottom: 0;
+    z-index: 3;
+    width: min(88vw, 380px);
+    max-width: 380px;
     background: linear-gradient(180deg, #15151a 0%, #0c0c0f 100%);
     border-left: 1px solid rgba(255, 24, 1, 0.3);
     box-shadow: -15px 0 50px rgba(0, 0, 0, 0.85);

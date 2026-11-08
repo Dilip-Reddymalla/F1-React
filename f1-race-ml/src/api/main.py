@@ -87,6 +87,8 @@ def _load_engine_from_disk():
 def _invalidate_engine_cache():
     _engine_cache["key"] = None
     _engine_cache["result"] = None
+    _compare_cache["key"] = None
+    _compare_cache["result"] = None
 
 
 def _current_engine_key():
@@ -153,6 +155,9 @@ app = FastAPI(title="F1 DNF Prediction API", version="0.1.0", lifespan=lifespan)
 # Simple in-memory cache for the (expensive) Monte Carlo engine result.
 # Keyed by (season, round) of the upcoming race; cleared on /refresh.
 _engine_cache = {"key": None, "result": None}
+
+# Cache for the compare/recent endpoint (model training is the expensive part).
+_compare_cache = {"key": None, "result": None}
 
 # Allow origins: dev + anything passed via PREDICT_ALLOW_ORIGINS
 # (comma-separated, e.g. "https://f1-react.vercel.app,https://mysite.com").
@@ -232,7 +237,7 @@ _HOME_HTML = """<!doctype html>
   Carlo race engine producing P1–P20 distributions.</p>
 
   <div class="status">
-    <span class="chip">Models ready: <b>{models_ready}</b></span>
+    <span class="chip">Models ready: <b>__MODELS_READY__</b></span>
     <span class="chip">Interactive docs: <a href="/docs">/docs</a></span>
   </div>
 
@@ -262,7 +267,9 @@ _HOME_HTML = """<!doctype html>
 
 @app.get("/", response_class=HTMLResponse)
 def home():
-    return _HOME_HTML.format(models_ready="yes" if models_ready() else "no")
+    # Use replace() (NOT .format / because the HTML/CSS contains {} braces.
+    ready = "yes" if models_ready() else "no"
+    return _HOME_HTML.replace("__MODELS_READY__", ready)
 
 
 @app.get("/next-race")
@@ -350,8 +357,17 @@ def predict_engine_post_quali_endpoint():
 
 @app.get("/compare/recent")
 def compare_recent_endpoint(races: int = 6):
-    """Predicted vs actual results for the most recent completed races."""
-    return compare_recent_races(k=races)
+    """Predicted vs actual results for the most recent completed races.
+
+    Cached (training is the expensive part) so repeat requests are instant.
+    """
+    key = ("recent", races)
+    if _compare_cache["key"] == key and _compare_cache["result"] is not None:
+        return _compare_cache["result"]
+    result = compare_recent_races(k=races)
+    _compare_cache["key"] = key
+    _compare_cache["result"] = result
+    return result
 
 
 if __name__ == "__main__":
