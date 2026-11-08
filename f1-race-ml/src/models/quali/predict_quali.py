@@ -34,7 +34,8 @@ sys.path.insert(0, str(ROOT))
 
 from config import (DNF_DATASET_CSV, RACE_RESULTS_CSV, QUALI_MODEL_FILE,  # noqa: E402
                     DNF_MODEL_FILE)
-from src.data.fetch_latest import latest_completed_entries  # noqa: E402
+from src.data.fetch_latest import (latest_completed_entries,              # noqa: E402
+                                   find_upcoming_with_qualifying)
 from src.features.build_features import (compute_features, POST_QUALIFYING_FEATURES,  # noqa: E402
                                          FEATURE_COLUMNS)
 from src.simulation.race_simulator import monte_carlo  # noqa: E402
@@ -62,6 +63,86 @@ def build_placeholders(raw, season, rnd, race_name, date, circuit):
             "dnf": np.nan,
         })
     return pd.DataFrame(rows)
+
+
+def build_placeholders_from_entries(entries, race):
+    """Placeholder rows for an upcoming race using REAL grid from qualifying."""
+    rows = []
+    for e in entries:
+        rows.append({
+            "season": race["season"],
+            "round": race["round"],
+            "race": race["race"],
+            "date": race["date"],
+            "circuit": race["circuit"],
+            "driver": e["driver"],
+            "driver_id": e["driver_id"],
+            "constructor": e["constructor"],
+            "grid": float(e["grid"]),
+            "dnf": np.nan,
+        })
+    return pd.DataFrame(rows)
+
+
+def run_quali_prediction_upcoming(season=None, rnd=None):
+    """Post-qualifying prediction for the upcoming race (real grid).
+
+    Uses the just-run qualifying session for the next race to update the
+    predicted finishing order. This is the "update after quali" path.
+    """
+    if season is None:
+        race, quali = find_upcoming_with_qualifying()
+    else:
+        from src.data.fetch_latest import fetch_qualifying_for_round, get_current_season
+        _, races = get_current_season()
+        race = next((r for r in races if r["round"] == rnd), None)
+        if race is None:
+            raise RuntimeError(f"No race found for season {season} round {rnd}")
+        race = {**race, "season": season}
+        quali = fetch_qualifying_for_round(season, rnd)
+
+    if quali is None or not quali["entries"]:
+        raise RuntimeError("No qualifying data available for the upcoming race yet.")
+
+    race_info = quali["race_info"]
+    race["race"] = race_info["raceName"]
+    race["circuit"] = race_info["Circuit"]["circuitName"]
+    race["date"] = race_info["date"]
+
+    placeholders = build_placeholders_from_entries(quali["entries"], race)
+
+    raw = pd.read_csv(RACE_RESULTS_CSV)
+    dataset = pd.read_csv(DNF_DATASET_CSV)
+    full = pd.concat([dataset, placeholders], ignore_index=True)
+    featured = compute_features(full, raw)
+    pred_rows = featured[featured["dnf"].isna()].copy().reset_index(drop=True)
+
+    quali_model = joblib.load(QUALI_MODEL_FILE)
+    pred_position = quali_model.predict(pred_rows[POST_QUALIFYING_FEATURES])
+
+    pred_rows["pred_position"] = pred_position
+    pred_rows["pred_rank"] = pred_rows["pred_position"].rank(method="first")
+    pred_rows = pred_rows.sort_values("pred_rank")
+
+    result = {
+        "race": race["race"],
+        "season": race["season"],
+        "round": race["round"],
+        "date": race["date"],
+        "circuit": race["circuit"],
+        "source": "upcoming race (post-qualifying)",
+        "model": "QualiModel (LinearRegression, post-qualifying)",
+        "predicted_order": [
+            {
+                "driver": r["driver"],
+                "constructor": r["constructor"],
+                "grid": int(r["grid"]),
+                "predicted_position": round(float(r["pred_position"]), 2),
+            }
+            for _, r in pred_rows.iterrows()
+        ],
+    }
+    return result
 
 
 def run_quali_prediction(season=None, rnd=None):

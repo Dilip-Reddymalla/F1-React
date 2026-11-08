@@ -45,8 +45,10 @@ sys.path.insert(0, str(ROOT))
 from config import RETRAIN_POLL_SECONDS, DNF_MODEL_FILE, RANKING_MODEL_FILE, QUALI_MODEL_FILE  # noqa: E402
 from src.data.fetch_latest import get_current_season, next_race, refresh_latest  # noqa: E402
 from src.models.dnf.predict_dnf import run_prediction                            # noqa: E402
-from src.models.ranking.predict_ranking import run_prediction as run_engine_prediction  # noqa: E402
-from src.models.quali.predict_quali import run_quali_prediction                  # noqa: E402
+from src.models.ranking.predict_ranking import (run_prediction as run_engine_prediction,  # noqa: E402
+                                                run_engine_post_qualifying)
+from src.models.quali.predict_quali import (run_quali_prediction,               # noqa: E402
+                                            run_quali_prediction_upcoming)
 from src.models.retrain import retrain_all, needs_retrain                       # noqa: E402
 
 def _refresh_engine_cache():
@@ -192,6 +194,18 @@ def predict_engine_endpoint():
 def predict_quali_endpoint(season: int | None = None, round: int | None = None):
     """Post-qualifying prediction. Defaults to the latest completed race."""
     return run_quali_prediction(season=season, rnd=round)
+
+
+@app.post("/predict/quali/upcoming")
+def predict_quali_upcoming_endpoint():
+    """Update prediction for the UPCOMING race using its real qualifying grid."""
+    return run_quali_prediction_upcoming()
+
+
+@app.post("/predict/engine/quali")
+def predict_engine_quali_endpoint():
+    """Full race engine for the upcoming race using REAL grid (post-qualifying)."""
+    return run_engine_post_qualifying()
 
 
 if __name__ == "__main__":

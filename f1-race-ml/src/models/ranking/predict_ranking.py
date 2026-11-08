@@ -37,15 +37,20 @@ sys.path.insert(0, str(ROOT))
 from config import (DNF_DATASET_CSV, RACE_RESULTS_CSV, DNF_MODEL_FILE,  # noqa: E402
                     RANKING_MODEL_FILE, RACE_ENGINE_FILE)
 from src.data.fetch_latest import (get_current_season, next_race,           # noqa: E402
-                                   latest_completed_entries)
+                                   latest_completed_entries,
+                                   find_upcoming_with_qualifying)
 from src.features.build_features import (compute_features,                 # noqa: E402
                                          FEATURE_COLUMNS, RANKING_FEATURES)
 from src.simulation.race_simulator import monte_carlo, summarize_engine    # noqa: E402
 
 
-def build_placeholder_rows(entries, race):
+def build_placeholder_rows(entries, race, grid_map=None):
+    """grid_map: {driver: grid} from qualifying; when given, uses real grid."""
     rows = []
     for e in entries:
+        grid = np.nan
+        if grid_map is not None:
+            grid = float(grid_map.get(e["driver"], np.nan))
         rows.append({
             "season": race["season"],
             "round": race["round"],
@@ -55,25 +60,52 @@ def build_placeholder_rows(entries, race):
             "driver": e["driver"],
             "driver_id": e["driver_id"],
             "constructor": e["constructor"],
-            "grid": np.nan,       # unknown before qualifying
+            "grid": grid,
             "dnf": np.nan,
         })
     return pd.DataFrame(rows)
 
 
-def run_prediction(refresh=False):
-    season, races = get_current_season()
-    race = next_race(season, races)
+def run_prediction(refresh=False, entries_with_grid=None, stage_hint=None,
+                   race_override=None):
+    """Run the race engine for the next race.
+
+    entries_with_grid: optional [{driver, driver_id, constructor, grid}] from
+        qualifying. When provided, the engine uses the REAL grid (post-qualifying)
+        instead of imputing it.
+
+    race_override: optional race dict (season, round, race, date, circuit) to
+        use instead of recomputing next_race() (needed for post-qualifying so
+        the labels match the grid passed in).
+    """
+    if race_override is not None:
+        race = race_override
+    else:
+        season, races = get_current_season()
+        race = next_race(season, races)
     if race is None:
         raise RuntimeError("No upcoming race found on the calendar.")
 
-    entries, last_race = latest_completed_entries(season)
+    if entries_with_grid is not None:
+        entries = entries_with_grid
+        last_race_name = "qualifying (real grid)"
+        stage = "post-qualifying (real grid)"
+    else:
+        entries, last_race = latest_completed_entries(season)
+        last_race_name = f"{last_race['raceName']} results (proxy entry list)"
+        stage = "pre-qualifying (grid imputed)"
     if not entries:
-        raise RuntimeError("No completed race available to build the entry list.")
+        raise RuntimeError("No entry list available to build the prediction.")
+
+    grid_map = None
+    if entries_with_grid is not None:
+        grid_map = {e["driver"]: e["grid"] for e in entries_with_grid}
+    if stage_hint:
+        stage = stage_hint
 
     dataset = pd.read_csv(DNF_DATASET_CSV)
     raw = pd.read_csv(RACE_RESULTS_CSV)
-    placeholders = build_placeholder_rows(entries, race)
+    placeholders = build_placeholder_rows(entries, race, grid_map=grid_map)
     full = pd.concat([dataset, placeholders], ignore_index=True)
     featured = compute_features(full, raw)
     pred_rows = featured[featured["dnf"].isna()].copy().reset_index(drop=True)
@@ -113,14 +145,31 @@ def run_prediction(refresh=False):
         "round": race["round"],
         "date": race["date"],
         "circuit": race["circuit"],
-        "entry_source": f"{last_race['raceName']} results (proxy entry list)",
-        "stage": "pre-qualifying (grid imputed)",
+        "entry_source": last_race_name,
+        "stage": stage,
         "engine": "Monte Carlo (10,000 simulations)",
         "predictions": predictions,
     }
 
     RACE_ENGINE_FILE.write_text(json.dumps(result, indent=2))
     return result
+
+
+def run_engine_post_qualifying():
+    """Run the full engine for the upcoming race using REAL grid from qualifying."""
+    race, quali = find_upcoming_with_qualifying()
+    if race is None or quali is None:
+        raise RuntimeError("No qualifying data available for the upcoming race.")
+    entries = quali["entries"]
+    race = dict(race)
+    race["race"] = quali["race_info"]["raceName"]
+    race["circuit"] = quali["race_info"]["Circuit"]["circuitName"]
+    race["date"] = quali["race_info"]["date"]
+    return run_prediction(
+        entries_with_grid=entries,
+        stage_hint="post-qualifying (real grid)",
+        race_override=race,
+    )
 
 
 def print_result(result):

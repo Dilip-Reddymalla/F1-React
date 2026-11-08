@@ -65,6 +65,25 @@ to the committed snapshot (`public/predictions/race_engine.json`) otherwise.
 
 ---
 
+## Updating predictions after qualifying
+
+Once a race weekend's **qualifying** has happened, you can update the prediction
+to use the real grid (the highest-value predictor). The API now exposes:
+
+```bash
+# Post-qualifying finishing order for the upcoming race (real grid)
+POST /predict/quali/upcoming
+
+# Full Monte Carlo engine (P1–P20 + winner prob) using the real grid
+POST /predict/engine/quali
+```
+
+These use the just-completed qualifying session for the next race, so the
+prediction reflects who qualified where. They automatically target the correct
+race (round 20 = Brazilian GP today). No manual data wiring needed.
+
+---
+
 ## Model retraining after each race
 
 The API includes a background scheduler that detects newly completed races and

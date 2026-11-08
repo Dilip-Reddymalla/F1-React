@@ -105,6 +105,49 @@ def fetch_results_for_round(season, round_no):
     return parse_results(races[0], season)
 
 
+def fetch_qualifying_for_round(season, round_no):
+    """Fetch qualifying for one round. Returns {"race_info":…, "entries":[…]}.
+
+    Each entry carries the REAL grid position from qualifying (position 1 =
+    pole). Returns None if qualifying is not yet available for that round.
+    """
+    url = f"{JOLPICA_BASE}/{season}/{round_no}/qualifying.json?limit=100"
+    data = api_get(url)
+    races = data["MRData"]["RaceTable"]["Races"]
+    if not races:
+        return None
+    race_info = races[0]
+    quals = race_info.get("QualifyingResults") or []
+    if not quals:
+        return None
+    entries = [
+        {
+            "driver_id": q["Driver"]["driverId"],
+            "driver": f'{q["Driver"]["givenName"]} {q["Driver"]["familyName"]}',
+            "constructor": q["Constructor"]["name"],
+            "grid": int(q["position"]),
+        }
+        for q in quals
+    ]
+    return {"race_info": race_info, "entries": entries}
+
+
+def find_upcoming_with_qualifying():
+    """Earliest race (today or later) that currently has qualifying data.
+
+    Returns (race, qualifying) or (None, None). This is what we use to update
+    predictions once a race weekend's qualifying session has happened.
+    """
+    season, races = get_current_season()
+    today = date.today().isoformat()
+    candidates = [r for r in races if r["date"] >= today]
+    for r in candidates:
+        q = fetch_qualifying_for_round(season, r["round"])
+        if q and q["entries"]:
+            return {**r, "season": season}, q
+    return None, None
+
+
 # ---------------------------------------------------------------------------
 # Refresh logic
 # ---------------------------------------------------------------------------
