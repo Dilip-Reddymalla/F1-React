@@ -30,8 +30,10 @@ export async function fetchRaceEngine() {
   const base = apiBase();
   try {
     // The engine loads models + runs 10k simulations, so allow a generous
-    // timeout (the server caches after the first call).
-    const data = await fetchJson(`${base}/predict/engine`, { method: "POST" }, 30000);
+    // timeout (the server caches after the first call). Cold hosts (e.g.
+    // Render free tier waking from sleep) can take up to ~60s on the first
+    // call, so 60s prevents spurious "cancelled" aborts.
+    const data = await fetchJson(`${base}/predict/engine`, { method: "POST" }, 60000);
     if (data && Array.isArray(data.predictions) && data.predictions.length > 0) {
       return { source: "live", data };
     }

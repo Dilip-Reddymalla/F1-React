@@ -19,6 +19,7 @@ Auto-retraining:
     PREDICT_RETRAIN_POLL_SECONDS) whether a race completed after the last
     training run. If so, it fetches the new results and refits all models.
 """
+import json
 import os
 import sys
 import time
@@ -42,7 +43,8 @@ def _root():
 ROOT = _root()
 sys.path.insert(0, str(ROOT))
 
-from config import RETRAIN_POLL_SECONDS, DNF_MODEL_FILE, RANKING_MODEL_FILE, QUALI_MODEL_FILE  # noqa: E402
+from config import (RETRAIN_POLL_SECONDS, DNF_MODEL_FILE, RANKING_MODEL_FILE,  # noqa: E402
+                    QUALI_MODEL_FILE, RACE_ENGINE_FILE)
 from src.data.fetch_latest import (get_current_season, next_race, refresh_latest,  # noqa: E402
                                    find_upcoming_with_qualifying)
 from src.models.dnf.predict_dnf import run_prediction                            # noqa: E402
@@ -62,6 +64,22 @@ def _refresh_engine_cache():
     _engine_cache["key"] = key
     _engine_cache["result"] = result
     return result
+
+
+def _load_engine_from_disk():
+    """Load a previously persisted engine result, if it still matches the
+    current target race/stage. Lets cold starts serve instantly without a
+    heavy recompute (which can exceed client timeouts on free-tier hosts)."""
+    try:
+        if not RACE_ENGINE_FILE.exists():
+            return None, None
+        result = json.loads(RACE_ENGINE_FILE.read_text())
+        key = (result.get("season"), result.get("round"), result.get("stage"))
+        if key and _current_engine_key() == key and result.get("predictions"):
+            return key, result
+    except Exception as exc:  # noqa: BLE001
+        print(f"[startup] engine disk-load skipped: {exc}")
+    return None, None
 
 
 def _invalidate_engine_cache():
@@ -109,8 +127,15 @@ def _run_retrain_scheduler():
 @asynccontextmanager
 async def lifespan(_app):
     # 1. Pre-warm the engine cache so the first page load is fast.
+    #    Prefer a persisted result (instant); recompute only if stale/missing.
     def _warm():
         try:
+            key, cached = _load_engine_from_disk()
+            if cached is not None:
+                _engine_cache["key"] = key
+                _engine_cache["result"] = cached
+                print("[startup] loaded engine result from disk cache")
+                return
             _refresh_engine_cache()
         except Exception as exc:  # noqa: BLE001
             print(f"[startup] engine pre-warm failed: {exc}")
