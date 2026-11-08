@@ -1,10 +1,16 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Header } from "../components/header";
 import { DriverImage } from "../components/driverImage";
-import { fetchRaceEngine } from "../services/predictions";
+import { fetchRaceEngine, fetchRecentComparison } from "../services/predictions";
 import "./predictions.css";
 
 const pct = (x) => `${(x * 100).toFixed(1)}%`;
+
+const MODES = [
+  { id: "pre", label: "Pre-Quali" },
+  { id: "post", label: "Post-Quali" },
+  { id: "compare", label: "Compare Past" },
+];
 
 // Approximate 2026 constructor colours (fallback grey).
 const TEAM_COLORS = {
@@ -83,6 +89,25 @@ function Hero({ engine, source }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function ModeSelector({ mode, onChange }) {
+  return (
+    <div className="pred-modes" role="tablist" aria-label="Prediction mode">
+      {MODES.map((m) => (
+        <button
+          key={m.id}
+          type="button"
+          role="tab"
+          aria-selected={mode === m.id}
+          className={`mode-btn ${mode === m.id ? "active" : ""}`}
+          onClick={() => onChange(m.id)}
+        >
+          {m.label}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -262,8 +287,68 @@ function DnfRisk({ predictions }) {
   );
 }
 
+function ComparisonView({ data }) {
+  const agg = data.aggregate || {};
+  return (
+    <>
+      <section className="pred-hero reveal">
+        <div className="pred-hero-bg"><span className="orb o2" /><div className="grid-floor" /></div>
+        <div className="pred-hero-content">
+          <span className="pred-eyebrow">📊 Prediction vs Reality</span>
+          <h1 className="pred-title">Recent <span className="line">Accuracy</span></h1>
+          <div className="pred-meta">
+            <span>🔢 <b>Last {data.races.length} races</b></span>
+            <span>🏆 <b>Winner hit rate</b></span>
+          </div>
+          <div className="pred-stats">
+            <div className="stat-chip"><span className="stat-label">Winner hit</span><span className="stat-value">{pct(agg.winner_hit_rate)}</span></div>
+            <div className="stat-chip"><span className="stat-label">Spearman</span><span className="stat-value">{agg.spearman?.toFixed(3)}</span></div>
+            <div className="stat-chip"><span className="stat-label">Top-3 overlap</span><span className="stat-value">{pct(agg.top3_overlap)}</span></div>
+            <div className="stat-chip"><span className="stat-label">Expected MAE</span><span className="stat-value">{agg.expected_mae}</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="glass reveal">
+        <h2 className="pred-section-title">Race-by-race</h2>
+        <div className="table-wrap">
+          <table className="order-table cmp-table">
+            <thead>
+              <tr>
+                <th>Race</th><th>Actual Winner</th><th>Predicted Winner</th><th>Hit</th><th>Spearman</th><th>Top-3</th><th>MAE</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.races.map((r) => (
+                <tr key={`${r.season}-${r.round}`}>
+                  <td className="table-driver">
+                    R{r.round} · {r.race}
+                    <div className="table-team">{new Date(r.date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</div>
+                  </td>
+                  <td className="table-driver">{r.actual_winner}</td>
+                  <td className="table-driver">{r.predicted_winner}</td>
+                  <td>{r.winner_hit ? <span className="hit-yes">✓</span> : <span className="hit-no">✗</span>}</td>
+                  <td className="table-num">{r.spearman?.toFixed(3) ?? "—"}</td>
+                  <td className="table-num">{pct(r.top3_overlap)}</td>
+                  <td className="table-num">{r.expected_mae}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="pred-notes" style={{ marginTop: "1rem" }}>
+          <strong>How this works:</strong> models are trained only on data strictly
+          before each held-out race (no leakage), then compared to the real result.
+        </p>
+      </section>
+    </>
+  );
+}
+
 export default function Predictions() {
+  const [mode, setMode] = useState("pre");
   const [engine, setEngine] = useState(null);
+  const [compare, setCompare] = useState(null);
   const [source, setSource] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -285,39 +370,42 @@ export default function Predictions() {
     return () => mq.removeListener(onChange);
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { source: src, data } = await fetchRaceEngine();
-        if (cancelled) return;
-        setEngine(data);
+  const loadData = useCallback(async (m) => {
+    setLoading(true);
+    setError(null);
+    setSelected(null);
+    setShowDistModal(false);
+    try {
+      if (m === "compare") {
+        const { source: src, data } = await fetchRecentComparison(6);
+        setCompare(data);
+        setEngine(null);
         setSource(src);
-        // On small screens the distribution is a modal that should open only on
-        // an explicit tap, so do NOT preselect a driver there. On desktop we
-        // preselect to keep the inline panel populated.
+      } else {
+        const { source: src, data } = await fetchRaceEngine(m);
+        setEngine(data);
+        setCompare(null);
+        setSource(src);
         if (!window.matchMedia("(max-width: 640px)").matches) {
           setSelected(data.predictions[0] || null);
         }
-      } catch (err) {
-        if (!cancelled) setError(err.message || "Failed to load predictions");
-      } finally {
-        if (!cancelled) setLoading(false);
       }
-    })();
-    return () => { cancelled = true; };
+    } catch (err) {
+      setError(err.message || "Failed to load data");
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  // On mobile the distribution opens as a modal; on desktop it updates the
-  // inline panel. Selected driver is shared by both.
+  useEffect(() => {
+    loadData(mode);
+  }, [mode, loadData]);
+
   const handleSelect = (driver) => {
     setSelected(driver);
-    if (isNarrow) {
-      setShowDistModal(true);
-    }
+    if (isNarrow) setShowDistModal(true);
   };
 
-  // Lock body scroll while the mobile modal is open.
   useEffect(() => {
     if (!showDistModal) return;
     const prev = document.body.style.overflow;
@@ -333,9 +421,8 @@ export default function Predictions() {
     return () => window.removeEventListener("keydown", onKey);
   }, [showDistModal]);
 
-  // Scroll-reveal once panels exist.
   useEffect(() => {
-    if (!engine || !mainRef.current) return;
+    if ((!engine && !compare) || !mainRef.current) return;
     const els = mainRef.current.querySelectorAll(".reveal");
     const io = new IntersectionObserver((entries) => {
       entries.forEach((e) => {
@@ -344,15 +431,22 @@ export default function Predictions() {
     }, { threshold: 0.12 });
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [engine]);
+  }, [engine, compare]);
 
   return (
     <>
       <Header />
       <main className="predictions-page" ref={mainRef}>
-        {loading && <div className="pred-state">Loading predictions…</div>}
+        <ModeSelector mode={mode} onChange={setMode} />
+
+        {loading && <div className="pred-state">Loading…</div>}
         {error && <div className="pred-state">Error: {error}</div>}
-        {!loading && !error && engine && (
+
+        {!loading && !error && mode === "compare" && compare && (
+          <ComparisonView data={compare} />
+        )}
+
+        {!loading && !error && mode !== "compare" && engine && (
           <>
             <Hero engine={engine} source={source} />
             <div className="checker" />
@@ -380,8 +474,9 @@ export default function Predictions() {
               chance of not finishing; the ranking model estimates finishing strength.
               The Monte Carlo engine (10,000 simulated races) combines both into a
               coherent P1–P20 distribution, winner probability, and expected rank.
-              All predictions use only pre-race information (no leakage) and are
-              pre-qualifying — grid data will sharpen them post-qualifying.
+              All predictions use only pre-race information (no leakage).
+              <strong> Pre-Quali</strong> imputes the grid; <strong>Post-Quali</strong>
+              uses the real grid once qualifying has happened.
             </p>
           </>
         )}

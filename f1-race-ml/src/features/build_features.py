@@ -84,6 +84,18 @@ CONTEXT = [
     "circuit_historical_dnf_rate",  # how dangerous this circuit tends to be
 ]
 
+# How many positions a driver/constructor historically gains (+ve) or loses
+# (-ve) from their starting grid. Computed from finished races only, and only
+# from races BEFORE the current one (leakage-safe).
+GRID_TO_FINISH_DELTA = [
+    "driver_recent_grid_to_finish_delta",
+    "driver_career_grid_to_finish_delta",
+    "driver_track_grid_to_finish_delta",
+    "constructor_recent_grid_to_finish_delta",
+    "constructor_career_grid_to_finish_delta",
+    "constructor_track_grid_to_finish_delta",
+]
+
 FEATURE_COLUMNS = (
     DRIVER_RELIABILITY
     + DRIVER_PERFORMANCE
@@ -91,6 +103,7 @@ FEATURE_COLUMNS = (
     + CONSTRUCTOR_PERFORMANCE
     + TRACK_DRIVER
     + TRACK_CONSTRUCTOR
+    + GRID_TO_FINISH_DELTA
     + CONTEXT
 )
 
@@ -244,6 +257,23 @@ def compute_features(dataset_df, raw_df):
     )
     df["driver_grid_overperformance"] = driver_avg_grid - df["grid"]
     df["constructor_grid_overperformance"] = constructor_avg_grid - df["grid"]
+
+    # ---- Grid → finish delta (positions gained/lost from starting grid) ------
+    # Only finished races contribute (a DNF has no meaningful finishing delta).
+    # All shifted/expanding so only history BEFORE the current race is used.
+    pos_delta = (df["finish_position"] - df["grid"]).where(df["dnf"] == 0)
+
+    _d_delta = pos_delta.groupby(df["driver_id"])
+    _c_delta = pos_delta.groupby(df["constructor"])
+    _dt_delta = pos_delta.groupby([df["driver_id"], df["circuit"]])
+    _ct_delta = pos_delta.groupby([df["constructor"], df["circuit"]])
+
+    df["driver_recent_grid_to_finish_delta"] = _d_delta.transform(_recent)
+    df["driver_career_grid_to_finish_delta"] = _d_delta.transform(_career_expanding)
+    df["driver_track_grid_to_finish_delta"] = _dt_delta.transform(_career_expanding)
+    df["constructor_recent_grid_to_finish_delta"] = _c_delta.transform(_recent)
+    df["constructor_career_grid_to_finish_delta"] = _c_delta.transform(_career_expanding)
+    df["constructor_track_grid_to_finish_delta"] = _ct_delta.transform(_career_expanding)
 
     return df
 

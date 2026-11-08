@@ -651,6 +651,42 @@
   .lb-name { font-size: 0.86rem; }
 }
 
+/* ------------------------- Mode selector ------------------------------- */
+.pred-modes {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.25rem;
+}
+.mode-btn {
+  padding: 0.55rem 1.2rem;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary, #b5b7ba);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.mode-btn:hover {
+  color: #fff;
+  border-color: rgba(255, 24, 1, 0.5);
+}
+.mode-btn.active {
+  background: linear-gradient(120deg, #b30000, #ff1801);
+  color: #fff;
+  border-color: #ff1801;
+  box-shadow: 0 4px 18px rgba(255, 24, 1, 0.4);
+}
+
+/* ------------------------ Comparison table ----------------------------- */
+.cmp-table td { white-space: normal; }
+.cmp-table .table-team { margin-top: 0.15rem; }
+.hit-yes { color: #00e676; font-weight: 800; }
+.hit-no { color: #ff6a5c; font-weight: 800; }
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .grid-floor, .orb, .pred-hero::after, .lb-bar, .dist-fill, .dnf-fill,

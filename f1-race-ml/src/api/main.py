@@ -30,6 +30,7 @@ import threading
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 
@@ -54,6 +55,7 @@ from src.models.ranking.predict_ranking import (run_prediction as run_engine_pre
 from src.models.quali.predict_quali import (run_quali_prediction,               # noqa: E402
                                             run_quali_prediction_upcoming)
 from src.models.retrain import retrain_all, needs_retrain                       # noqa: E402
+from src.evaluation.engine_eval import compare_recent_races                    # noqa: E402
 
 def _refresh_engine_cache():
     """Compute the engine result (auto pre/post-qualifying) and cache it."""
@@ -189,6 +191,80 @@ def health():
     return {"status": "ok", "service": "f1-dnf-prediction", "models_ready": models_ready()}
 
 
+_HOME_HTML = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>F1 ML Prediction API</title>
+<style>
+  :root { --bg:#0b0b0d; --surface:#1a1a1e; --red:#ff1801; --text:#fff; --muted:#b5b7ba; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.6; }
+  .wrap { max-width:860px; margin:0 auto; padding:3.5rem 1.5rem; }
+  .badge { display:inline-block; background:rgba(255,24,1,.14); color:#ff6a5c;
+           border:1px solid rgba(255,24,1,.4); padding:.3rem .9rem; border-radius:999px;
+           font-size:.8rem; letter-spacing:2px; text-transform:uppercase; font-weight:800; }
+  h1 { font-size:2.6rem; margin:.9rem 0 .4rem; letter-spacing:-1px; }
+  h1 span { color:var(--red); }
+  .sub { color:var(--muted); max-width:640px; }
+  .status { margin:1.5rem 0; display:flex; gap:1rem; flex-wrap:wrap; }
+  .chip { background:var(--surface); border:1px solid #2a2a30; border-radius:12px;
+          padding:.6rem 1rem; font-size:.9rem; }
+  .chip b { color:var(--red); }
+  table { width:100%; border-collapse:collapse; margin-top:1.5rem; font-size:.95rem; }
+  th { text-align:left; background:rgba(255,24,1,.12); padding:.7rem 1rem;
+       font-size:.75rem; letter-spacing:1px; text-transform:uppercase;
+       border-bottom:2px solid rgba(255,24,1,.5); }
+  td { padding:.65rem 1rem; border-bottom:1px solid rgba(255,255,255,.06); }
+  code { background:rgba(255,255,255,.08); padding:.1rem .4rem; border-radius:6px; }
+  a { color:#ff6a5c; text-decoration:none; }
+  .foot { margin-top:2.5rem; color:var(--muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="badge">🏁 F1 Race Predictions</span>
+  <h1>ML <span>Prediction API</span></h1>
+  <p class="sub">FastAPI service for the Formula 1 prediction system: DNF
+  probabilities, finishing-order ranking (pre/post-qualifying), and a Monte
+  Carlo race engine producing P1–P20 distributions.</p>
+
+  <div class="status">
+    <span class="chip">Models ready: <b>{models_ready}</b></span>
+    <span class="chip">Interactive docs: <a href="/docs">/docs</a></span>
+  </div>
+
+  <h2>Endpoints</h2>
+  <table>
+    <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td>GET</td><td><code>/health</code></td><td>Service + model status</td></tr>
+      <tr><td>GET</td><td><code>/next-race</code></td><td>Upcoming race info</td></tr>
+      <tr><td>POST</td><td><code>/predict/engine</code></td><td>Engine — auto (uses qualifying if available)</td></tr>
+      <tr><td>POST</td><td><code>/predict/engine/pre-quali</code></td><td>Engine — pre-qualifying (imputed grid)</td></tr>
+      <tr><td>POST</td><td><code>/predict/engine/post-quali</code></td><td>Engine — post-qualifying (real grid)</td></tr>
+      <tr><td>POST</td><td><code>/predict</code></td><td>DNF probabilities for next race</td></tr>
+      <tr><td>POST</td><td><code>/predict/quali/upcoming</code></td><td>Post-quali finishing order (real grid)</td></tr>
+      <tr><td>GET</td><td><code>/compare/recent?races=6</code></td><td>Predicted vs actual for recent races</td></tr>
+      <tr><td>POST</td><td><code>/retrain</code></td><td>Refit all models</td></tr>
+      <tr><td>POST</td><td><code>/refresh</code></td><td>Fetch latest data (+ retrain if new race)</td></tr>
+    </tbody>
+  </table>
+
+  <p class="foot">Auto-retraining runs after each completed race. Models are
+  trained offline; inference is cached and fast.</p>
+</div>
+</body>
+</html>"""
+
+
+@app.get("/", response_class=HTMLResponse)
+def home():
+    return _HOME_HTML.format(models_ready="yes" if models_ready() else "no")
+
+
 @app.get("/next-race")
 def next_race_endpoint():
     season, races = get_current_season()
@@ -258,6 +334,24 @@ def predict_quali_upcoming_endpoint():
 def predict_engine_quali_endpoint():
     """Full race engine for the upcoming race using REAL grid (post-qualifying)."""
     return run_engine_post_qualifying()
+
+
+@app.post("/predict/engine/pre-quali")
+def predict_engine_pre_quali_endpoint():
+    """Full race engine for the next race — forced pre-qualifying (imputed grid)."""
+    return run_engine_prediction(stage_hint="pre-qualifying (grid imputed)")
+
+
+@app.post("/predict/engine/post-quali")
+def predict_engine_post_quali_endpoint():
+    """Full race engine for the next race — forced post-qualifying (real grid)."""
+    return run_engine_post_qualifying()
+
+
+@app.get("/compare/recent")
+def compare_recent_endpoint(races: int = 6):
+    """Predicted vs actual results for the most recent completed races."""
+    return compare_recent_races(k=races)
 
 
 if __name__ == "__main__":

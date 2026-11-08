@@ -33,8 +33,9 @@ def _root():
 ROOT = _root()
 sys.path.insert(0, str(ROOT))
 
-from config import DNF_FEATURES_CSV  # noqa: E402
-from src.features.build_features import FEATURE_COLUMNS, RANKING_FEATURES  # noqa: E402
+from config import DNF_FEATURES_CSV, RACE_RESULTS_CSV  # noqa: E402
+from src.features.build_features import (FEATURE_COLUMNS, RANKING_FEATURES,  # noqa: E402
+                                         compute_features)
 from src.simulation.race_simulator import monte_carlo  # noqa: E402
 
 TEST_YEARS = [2024, 2025, 2026]
@@ -142,3 +143,96 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+def compare_recent_races(k=6):
+    """Compare the engine's predicted finishing order vs ACTUAL results for the
+    most recent `k` completed races (walk-forward: models trained only on data
+    strictly before each hold-out race).
+
+    Returns per-race predictions vs actual + aggregate accuracy metrics.
+    """
+    df = pd.read_csv(DNF_FEATURES_CSV)
+    raw = pd.read_csv(RACE_RESULTS_CSV)
+
+    races = df[["season", "round"]].drop_duplicates() \
+        .sort_values(["season", "round"]).reset_index(drop=True)
+    if len(races) < 2:
+        raise RuntimeError("Not enough completed races to compare.")
+    k = min(k, len(races) - 1)
+    holdout = races.tail(k).reset_index(drop=True)
+
+    # Train once on everything BEFORE the first hold-out race.
+    first = holdout.iloc[0]
+    train_df = df[((df["season"] < first["season"]) |
+                   ((df["season"] == first["season"]) & (df["round"] < first["round"])))].copy()
+
+    dnf = dnf_pipeline()
+    dnf.fit(train_df[FEATURE_COLUMNS], train_df["dnf"].astype(int))
+    r_tr = train_df.dropna(subset=["finish_position", "grid"])
+    rank = ranking_pipeline()
+    rank.fit(r_tr[RANKING_FEATURES], r_tr["finish_position"].astype(float))
+
+    rows = []
+    for _, rr in holdout.iterrows():
+        s = int(rr["season"]); rnd = int(rr["round"])
+        ctx = df[((df["season"] < s) | ((df["season"] == s) & (df["round"] < rnd)))]
+        sub_raw = raw[(raw["season"] == s) & (raw["round"] == rnd)] \
+            .sort_values("finish_position")
+
+        placeholders = []
+        for _, d in sub_raw.iterrows():
+            placeholders.append({
+                "season": s, "round": rnd, "race": d["race"], "date": d["date"],
+                "circuit": d["circuit"], "driver": d["driver"],
+                "driver_id": d["driver_id"], "constructor": d["constructor"],
+                "grid": float(d["grid"]), "dnf": np.nan,
+            })
+        full = pd.concat([ctx, pd.DataFrame(placeholders)], ignore_index=True)
+        feat = compute_features(full, raw)
+        pr = feat[feat["dnf"].isna()].reset_index(drop=True)
+
+        p_dnf = dnf.predict_proba(pr[FEATURE_COLUMNS])[:, 1]
+        exp = rank.predict(pr[RANKING_FEATURES])
+        sim = monte_carlo(pr["driver"].tolist(), p_dnf, exp, n_sims=N_SIMS)
+        exp_rank = {x["driver"]: x["expected_rank"] for x in sim}
+
+        predicted_order = sorted(exp_rank, key=exp_rank.get)
+        actual_order = sub_raw["driver"].tolist()
+        actual_winner = actual_order[0]
+        predicted_winner = predicted_order[0]
+
+        idx = [actual_order.index(d) for d in predicted_order if d in actual_order]
+        if len(idx) >= 2:
+            rho = float(spearmanr(idx, list(range(len(idx)))).statistic)
+        else:
+            rho = None
+
+        finish_map = dict(zip(sub_raw["driver"], sub_raw["finish_position"]))
+        mae = float(np.mean([abs(exp_rank[d] - finish_map[d])
+                             for d in exp_rank if d in finish_map]))
+        top3_overlap = len(set(predicted_order[:3]) & set(actual_order[:3])) / 3.0
+
+        rows.append({
+            "season": s, "round": rnd,
+            "race": sub_raw["race"].iloc[0],
+            "date": sub_raw["date"].iloc[0],
+            "circuit": sub_raw["circuit"].iloc[0],
+            "actual_winner": actual_winner,
+            "predicted_winner": predicted_winner,
+            "winner_hit": bool(actual_winner == predicted_winner),
+            "spearman": rho,
+            "top3_overlap": round(top3_overlap, 3),
+            "expected_mae": round(mae, 2),
+        })
+
+    return {
+        "k": k,
+        "races": rows,
+        "aggregate": {
+            "winner_hit_rate": round(float(np.mean([r["winner_hit"] for r in rows])), 3),
+            "spearman": round(float(np.nanmean(
+                [r["spearman"] for r in rows if r["spearman"] is not None])), 4),
+            "top3_overlap": round(float(np.mean([r["top3_overlap"] for r in rows])), 3),
+            "expected_mae": round(float(np.mean([r["expected_mae"] for r in rows])), 2),
+        },
+    }
