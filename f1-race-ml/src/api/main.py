@@ -43,20 +43,22 @@ ROOT = _root()
 sys.path.insert(0, str(ROOT))
 
 from config import RETRAIN_POLL_SECONDS, DNF_MODEL_FILE, RANKING_MODEL_FILE, QUALI_MODEL_FILE  # noqa: E402
-from src.data.fetch_latest import get_current_season, next_race, refresh_latest  # noqa: E402
+from src.data.fetch_latest import (get_current_season, next_race, refresh_latest,  # noqa: E402
+                                   find_upcoming_with_qualifying)
 from src.models.dnf.predict_dnf import run_prediction                            # noqa: E402
 from src.models.ranking.predict_ranking import (run_prediction as run_engine_prediction,  # noqa: E402
-                                                run_engine_post_qualifying)
+                                                run_engine_post_qualifying,
+                                                run_prediction_auto)
 from src.models.quali.predict_quali import (run_quali_prediction,               # noqa: E402
                                             run_quali_prediction_upcoming)
 from src.models.retrain import retrain_all, needs_retrain                       # noqa: E402
 
 def _refresh_engine_cache():
-    """Compute the engine result and store it in the shared cache. Returns it."""
-    season, races = get_current_season()
-    nr = next_race(season, races)
-    key = (nr["season"], nr["round"]) if nr else None
-    result = run_engine_prediction()
+    """Compute the engine result (auto pre/post-qualifying) and cache it."""
+    result = run_prediction_auto()
+    # Cache key includes the stage so the cache refreshes when qualifying
+    # becomes available for the same race (pre-quali -> post-quali).
+    key = (result.get("season"), result.get("round"), result.get("stage"))
     _engine_cache["key"] = key
     _engine_cache["result"] = result
     return result
@@ -65,6 +67,24 @@ def _refresh_engine_cache():
 def _invalidate_engine_cache():
     _engine_cache["key"] = None
     _engine_cache["result"] = None
+
+
+def _current_engine_key():
+    """Cheaply compute the expected cache key for the next race.
+
+    If qualifying has happened for the target race, the key is the post-quali
+    stage; otherwise pre-quali. Comparing this to the cached key lets us serve
+    the fast cached result when nothing changed, and refresh the moment
+    qualifying becomes available.
+    """
+    race, quali = find_upcoming_with_qualifying()
+    if race is not None and quali is not None:
+        return (race["season"], race["round"], "post-qualifying (real grid)")
+    season, races = get_current_season()
+    nr = next_race(season, races)
+    if nr is None:
+        return None
+    return (nr["season"], nr["round"], "pre-qualifying (grid imputed)")
 
 
 def models_ready():
@@ -182,9 +202,7 @@ def predict_engine_endpoint():
             detail="Models not trained yet. Run `npm run dev` (auto-bootstraps) "
                    "or `python src/models/retrain.py --fetch`.",
         )
-    season, races = get_current_season()
-    nr = next_race(season, races)
-    key = (nr["season"], nr["round"]) if nr else None
+    key = _current_engine_key()
     if key and _engine_cache["key"] == key and _engine_cache["result"] is not None:
         return _engine_cache["result"]
     return _refresh_engine_cache()

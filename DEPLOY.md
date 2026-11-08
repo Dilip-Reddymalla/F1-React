@@ -82,6 +82,11 @@ These use the just-completed qualifying session for the next race, so the
 prediction reflects who qualified where. They automatically target the correct
 race (round 20 = Brazilian GP today). No manual data wiring needed.
 
+> **The main `/predict/engine` endpoint is now automatic**: it checks whether
+> qualifying exists for the target race and, if so, predicts using the real grid
+> (post-qualifying); otherwise it falls back to the pre-qualifying prediction.
+> No need to call the `/quali` variants manually — `/predict/engine` handles it.
+
 ---
 
 ## Model retraining after each race

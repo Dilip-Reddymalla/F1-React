@@ -172,6 +172,21 @@ def run_engine_post_qualifying():
     )
 
 
+def run_prediction_auto():
+    """Run the engine for the next race, auto-selecting the prediction stage.
+
+    - If qualifying has already happened for the target race (a race weekend is
+      underway), use the REAL grid (post-qualifying).
+    - Otherwise, fall back to the pre-qualifying prediction (imputed grid).
+
+    This is the behaviour of the main /predict/engine endpoint.
+    """
+    race, quali = find_upcoming_with_qualifying()
+    if race is not None and quali is not None:
+        return run_engine_post_qualifying()
+    return run_prediction()
+
+
 def print_result(result):
     print("\n" + "=" * 78)
     print(f"  RACE ENGINE — {result['race']} (Round {result['round']}, Season {result['season']})")
