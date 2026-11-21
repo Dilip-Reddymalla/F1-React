@@ -26,7 +26,7 @@ export default function Races({ year, setYear }) {
 
     const animationRef = useRef(null);
     useEffect(() => {
-        setYear(2026);
+        setYear(new Date().getFullYear());
     }, []);
     // 2. Effects
     // Reset state when year changes

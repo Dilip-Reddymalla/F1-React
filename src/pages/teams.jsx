@@ -12,7 +12,7 @@ export function TeamDetails({ year, setYear }) {
   const teamsCacheRef = useRef(new Map());
 
   useEffect(() => {
-    setYear(2026);
+    setYear(new Date().getFullYear());
   }, []);
 
   useEffect(() => {

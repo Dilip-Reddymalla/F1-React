@@ -4,7 +4,8 @@
   align-items: flex-end;
   gap: 1rem;
   margin: 2rem 0;
-  height: 400px; /* Increased height to accommodate images */
+  height: 420px; /* room for the floating photos + column heights */
+  padding-top: 70px; /* headroom for photo overlap */
 }
 
 .podium-step {
@@ -13,29 +14,31 @@
   align-items: center;
   justify-content: flex-end;
   padding-bottom: 1rem;
-  width: 150px;
+  width: 160px;
+  min-height: 190px; /* content-aware: grows if names wrap */
   border-radius: 8px 8px 0 0;
   color: white;
   text-align: center;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
   position: relative;
+  overflow: visible;
 }
 
 .podium-step.p1 {
-  height: 80%; /* Adjusted relative heights */
+  min-height: 290px;
   background: linear-gradient(to top, #ffd700, #b8860b);
   order: 2;
   z-index: 10;
 }
 
 .podium-step.p2 {
-  height: 60%;
+  min-height: 230px;
   background: linear-gradient(to top, #c0c0c0, #808080);
   order: 1;
 }
 
 .podium-step.p3 {
-  height: 50%;
+  min-height: 190px;
   background: linear-gradient(to top, #cd7f32, #8b4513);
   order: 3;
 }
@@ -71,16 +74,30 @@
 
 .podium-step .driver-name {
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
+  line-height: 1.2;
   margin-bottom: 0.25rem;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
   padding: 0 0.5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  hyphens: auto;
 }
 
 .podium-step .constructor {
   font-size: 0.8rem;
   opacity: 0.9;
   padding: 0 0.5rem;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .podium-step .time {
@@ -95,26 +112,28 @@
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .podium-container {
-    height: 300px;
+    height: 320px;
+    padding-top: 55px;
     gap: 0.75rem;
     margin: 1.5rem 0;
   }
 
   .podium-step {
-    width: 120px;
+    width: 128px;
     padding-bottom: 0.75rem;
+    min-height: 145px;
   }
 
   .podium-step.p1 {
-    height: 80%;
+    min-height: 220px;
   }
 
   .podium-step.p2 {
-    height: 60%;
+    min-height: 175px;
   }
 
   .podium-step.p3 {
-    height: 50%;
+    min-height: 145px;
   }
 
   .podium-step .driver-photo {
@@ -154,7 +173,8 @@
 
 @media (max-width: 480px) {
   .podium-container {
-    height: 250px;
+    height: 260px;
+    padding-top: 45px;
     gap: 0.35rem;
     margin: 1rem 0;
     max-width: 100%;
@@ -162,20 +182,21 @@
   }
 
   .podium-step {
-    width: min(28vw, 95px);
+    width: min(32vw, 115px);
     padding-bottom: 0.5rem;
+    min-height: 112px;
   }
 
   .podium-step.p1 {
-    height: 80%;
+    min-height: 172px;
   }
 
   .podium-step.p2 {
-    height: 60%;
+    min-height: 136px;
   }
 
   .podium-step.p3 {
-    height: 50%;
+    min-height: 112px;
   }
 
   .podium-step .driver-photo {

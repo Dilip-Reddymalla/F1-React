@@ -54,84 +54,73 @@ export function Header() {
   const closeMenu = () => setIsMenuOpen(false);
 
   return (
-    <header className={`navbar ${isMenuOpen ? "menu-open" : ""}`}>
-      <div className="navbar-container">
-        <Link to="/" className="logo" onClick={closeMenu} aria-label="Formula 1 Home">
-          <img src={f1} alt="F1 logo" />
-        </Link>
+    <>
+      {/* Desktop + mobile top bar */}
+      <header className={`navbar ${isMenuOpen ? "menu-open" : ""}`}>
+        <div className="navbar-container">
+          <Link to="/" className="logo" onClick={closeMenu} aria-label="Formula 1 Home">
+            <img src={f1} alt="F1 logo" />
+          </Link>
 
-        {/* Desktop Navigation Links */}
-        <nav className="desktop-nav" aria-label="Desktop Navigation">
-          <Link
-            to="/"
-            className={`nav-link ${location.pathname === "/" ? "active" : ""}`}
-          >
-            Home
-          </Link>
-          <Link
-            to="/globe"
-            className={`nav-link nav-globe-link ${location.pathname === "/globe" ? "active" : ""}`}
-          >
-            <span className="nav-globe-icon">🌐</span>
-            <span>World Tour</span>
-            <span className="nav-3d-badge">3D</span>
-          </Link>
-          <Link
-            to="/drivers"
-            className={`nav-link ${location.pathname === "/drivers" ? "active" : ""}`}
-          >
-            Drivers
-          </Link>
-          <Link
-            to="/teams"
-            className={`nav-link ${location.pathname === "/teams" ? "active" : ""}`}
-          >
-            Teams
-          </Link>
-          <Link
-            to="/races"
-            id="pending"
-            className={`nav-link ${location.pathname === "/races" ? "active" : ""}`}
-          >
-            Races
-          </Link>
-          <Link
-            to="/qualifying"
-            className={`nav-link ${location.pathname === "/qualifying" ? "active" : ""}`}
-          >
-            Qualifying
-          </Link>
-          <Link
-            to="/standings"
-            className={`nav-link ${location.pathname === "/standings" ? "active" : ""}`}
-          >
-            Standings
-          </Link>
-          <Link
-            to="/predictions"
-            className={`nav-link nav-globe-link ${location.pathname === "/predictions" ? "active" : ""}`}
-          >
-            <span>Predict</span>
-            <span className="nav-3d-badge">ML</span>
-          </Link>
-        </nav>
+          {/* Desktop Navigation Links */}
+          <nav className="desktop-nav" aria-label="Desktop Navigation">
+            <Link to="/" className={`nav-link ${location.pathname === "/" ? "active" : ""}`}>
+              Home
+            </Link>
+            <Link
+              to="/globe"
+              className={`nav-link nav-globe-link ${location.pathname === "/globe" ? "active" : ""}`}
+            >
+              <span className="nav-globe-icon">🌐</span>
+              <span>World Tour</span>
+              <span className="nav-3d-badge">3D</span>
+            </Link>
+            <Link to="/drivers" className={`nav-link ${location.pathname === "/drivers" ? "active" : ""}`}>
+              Drivers
+            </Link>
+            <Link to="/teams" className={`nav-link ${location.pathname === "/teams" ? "active" : ""}`}>
+              Teams
+            </Link>
+            <Link to="/races" id="pending" className={`nav-link ${location.pathname === "/races" ? "active" : ""}`}>
+              Races
+            </Link>
+            <Link to="/qualifying" className={`nav-link ${location.pathname === "/qualifying" ? "active" : ""}`}>
+              Qualifying
+            </Link>
+            <Link to="/standings" className={`nav-link ${location.pathname === "/standings" ? "active" : ""}`}>
+              Standings
+            </Link>
+            <Link
+              to="/predictions"
+              className={`nav-link nav-globe-link ${location.pathname === "/predictions" ? "active" : ""}`}
+            >
+              <span>Predict</span>
+              <span className="nav-3d-badge">ML</span>
+            </Link>
+          </nav>
 
-        {/* Mobile Hamburger Button */}
-        <button
-          type="button"
-          className={`hamburger-btn ${isMenuOpen ? "active" : ""}`}
-          onClick={toggleMenu}
-          aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={isMenuOpen}
-        >
-          <span className="hamburger-bar"></span>
-          <span className="hamburger-bar"></span>
-          <span className="hamburger-bar"></span>
-        </button>
-      </div>
+          {/* Mobile Hamburger Button */}
+          <button
+            type="button"
+            className={`hamburger-btn ${isMenuOpen ? "active" : ""}`}
+            onClick={toggleMenu}
+            aria-label={isMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMenuOpen}
+          >
+            <span className="hamburger-bar" />
+            <span className="hamburger-bar" />
+            <span className="hamburger-bar" />
+          </button>
+        </div>
+      </header>
 
-      {/* Mobile Navigation Drawer Overlay */}
-      <div className={`mobile-nav-overlay ${isMenuOpen ? "open" : ""}`} aria-hidden={!isMenuOpen}>
+      {/* Mobile navigation overlay/drawer — a SIBLING of <header>, not a child.
+          The navbar's backdrop-filter would otherwise become the fixed-position
+          containing block and collapse the drawer to 0 height. */}
+      <div
+        className={`mobile-nav-overlay ${isMenuOpen ? "open" : ""}`}
+        aria-hidden={!isMenuOpen}
+      >
         <div
           className="mobile-nav-backdrop"
           onClick={closeMenu}
@@ -156,11 +145,7 @@ export function Header() {
           </div>
 
           <div className="mobile-nav-links">
-            <Link
-              to="/"
-              onClick={closeMenu}
-              className={`mobile-nav-link ${location.pathname === "/" ? "active" : ""}`}
-            >
+            <Link to="/" onClick={closeMenu} className={`mobile-nav-link ${location.pathname === "/" ? "active" : ""}`}>
               <span className="nav-item-icon">🏠</span>
               <span>Home</span>
             </Link>
@@ -173,51 +158,27 @@ export function Header() {
               <span>World Tour</span>
               <span className="nav-3d-badge">3D</span>
             </Link>
-            <Link
-              to="/drivers"
-              onClick={closeMenu}
-              className={`mobile-nav-link ${location.pathname === "/drivers" ? "active" : ""}`}
-            >
+            <Link to="/drivers" onClick={closeMenu} className={`mobile-nav-link ${location.pathname === "/drivers" ? "active" : ""}`}>
               <span className="nav-item-icon">🏎️</span>
               <span>Drivers</span>
             </Link>
-            <Link
-              to="/teams"
-              onClick={closeMenu}
-              className={`mobile-nav-link ${location.pathname === "/teams" ? "active" : ""}`}
-            >
+            <Link to="/teams" onClick={closeMenu} className={`mobile-nav-link ${location.pathname === "/teams" ? "active" : ""}`}>
               <span className="nav-item-icon">🏁</span>
               <span>Teams</span>
             </Link>
-            <Link
-              to="/races"
-              onClick={closeMenu}
-              className={`mobile-nav-link ${location.pathname === "/races" ? "active" : ""}`}
-            >
+            <Link to="/races" onClick={closeMenu} className={`mobile-nav-link ${location.pathname === "/races" ? "active" : ""}`}>
               <span className="nav-item-icon">📅</span>
               <span>Races</span>
             </Link>
-            <Link
-              to="/qualifying"
-              onClick={closeMenu}
-              className={`mobile-nav-link ${location.pathname === "/qualifying" ? "active" : ""}`}
-            >
+            <Link to="/qualifying" onClick={closeMenu} className={`mobile-nav-link ${location.pathname === "/qualifying" ? "active" : ""}`}>
               <span className="nav-item-icon">🏁</span>
               <span>Qualifying</span>
             </Link>
-            <Link
-              to="/standings"
-              onClick={closeMenu}
-              className={`mobile-nav-link ${location.pathname === "/standings" ? "active" : ""}`}
-            >
+            <Link to="/standings" onClick={closeMenu} className={`mobile-nav-link ${location.pathname === "/standings" ? "active" : ""}`}>
               <span className="nav-item-icon">🏆</span>
               <span>Standings</span>
             </Link>
-            <Link
-              to="/predictions"
-              onClick={closeMenu}
-              className={`mobile-nav-link ${location.pathname === "/predictions" ? "active" : ""}`}
-            >
+            <Link to="/predictions" onClick={closeMenu} className={`mobile-nav-link ${location.pathname === "/predictions" ? "active" : ""}`}>
               <span className="nav-item-icon">🔮</span>
               <span>Predict</span>
               <span className="nav-3d-badge">ML</span>
@@ -231,6 +192,6 @@ export function Header() {
           </div>
         </nav>
       </div>
-    </header>
+    </>
   );
 }

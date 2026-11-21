@@ -70,7 +70,7 @@ export function Driver({ year, setYear }) {
 
 
   useEffect(() => {
-    setYear(2026);
+    setYear(new Date().getFullYear());
   }, []);
 
   async function fectchChachedDrivers(url) {

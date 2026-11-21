@@ -8,7 +8,7 @@ import "./standings.css";
 
 export function Standings({ year, setYear }) {
   useEffect(() => {
-    setYear(2026);
+    setYear(new Date().getFullYear());
   }, []);
 
   const [standings, setStandings] = useState("Drivers Championship");
@@ -101,7 +101,7 @@ export function Standings({ year, setYear }) {
             
             <div className="standings-list-section">
                 <StandingsTable 
-                    standings={data.slice(3)} 
+                    standings={data} 
                     type={standings} 
                     onClick={handleItemClick}
                 />

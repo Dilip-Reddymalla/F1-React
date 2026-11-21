@@ -75,6 +75,43 @@
   min-width: 240px;
 }
 
+/* Theme every select in the qualifying controls (the year Dropdown component
+   renders a bare <select> with no class, so it must match too). */
+.q-control-group select {
+  padding: 0.5rem 1rem;
+  background: #1a1a1e;
+  color: #ffffff;
+  border: 1px solid #2a2a30;
+  border-radius: 6px;
+  font-size: 1rem;
+  min-width: 240px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #b5b7ba 50%),
+    linear-gradient(135deg, #b5b7ba 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(1em + 2px),
+    calc(100% - 13px) calc(1em + 2px);
+  background-size:
+    5px 5px,
+    5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 32px;
+}
+
+.q-control-group select:focus {
+  outline: none;
+  border-color: #e10600;
+  box-shadow: 0 0 0 2px rgba(225, 6, 0, 0.2);
+}
+
+.q-control-group option {
+  background: #1a1a1e;
+  color: #ffffff;
+}
+
 .q-error {
   color: #ff4444;
   background: rgba(255, 0, 0, 0.1);
@@ -111,72 +148,378 @@
 
 .q-table-wrap {
   overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(24, 24, 29, 0.85), rgba(14, 15, 20, 0.9));
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.35);
 }
 
 .q-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.9rem;
+  min-width: 560px;
 }
 
 .q-table th,
 .q-table td {
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1.1rem;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.q-table thead {
+  background: rgba(255, 24, 1, 0.12);
 }
 
 .q-table th {
   text-transform: uppercase;
-  font-size: 0.75rem;
-  color: #999;
-  letter-spacing: 1px;
+  font-size: 0.72rem;
+  color: #fff;
+  letter-spacing: 1.5px;
+  font-weight: 800;
+  border-bottom: 2px solid rgba(255, 24, 1, 0.45);
 }
 
-.q-table tr:hover {
-  background: rgba(255, 255, 255, 0.04);
+.q-table tbody tr {
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.q-table tbody tr:hover {
+  background: rgba(255, 24, 1, 0.07);
+}
+
+.q-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Pole position row: gold tint */
+.q-table tbody tr.pole-row {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.12), rgba(255, 215, 0, 0.03));
+}
+.q-table tbody tr.pole-row:hover {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.18), rgba(255, 215, 0, 0.06));
 }
 
 .q-pos {
   font-weight: 800;
   text-align: center;
-  width: 64px;
+  width: 76px;
 }
 
-.q-pos.pole {
-  color: #ffd700;
+.q-pos-badge {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  font-weight: 900;
+  font-size: 0.85rem;
+  background: rgba(255, 255, 255, 0.07);
+  color: #d0d2d6;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.q-pos.pole .q-pos-badge {
+  background: linear-gradient(135deg, #ffd700, #ffaa00);
+  color: #1a1500;
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 14px rgba(255, 215, 0, 0.45);
 }
 
 .pole-tag {
   display: inline-block;
   margin-left: 0.5rem;
-  font-size: 0.6rem;
-  letter-spacing: 1px;
+  font-size: 0.58rem;
+  letter-spacing: 1.5px;
   background: rgba(255, 215, 0, 0.15);
   color: #ffd700;
   border: 1px solid rgba(255, 215, 0, 0.4);
-  padding: 0.1rem 0.4rem;
-  border-radius: 4px;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
   vertical-align: middle;
+  font-weight: 800;
 }
 
-.q-driver strong {
+.q-driver {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.q-driver-name {
+  white-space: nowrap;
+}
+.q-driver-name strong {
   margin-left: 4px;
+  color: #fff;
+}
+
+.q-constructor {
+  color: #b5b7ba;
+  font-size: 0.85rem;
 }
 
 .q-time {
   font-family: "JetBrains Mono", "SF Mono", Consolas, monospace;
+  font-size: 0.88rem;
   color: #9cccff;
+  letter-spacing: 0.3px;
 }
 
 .q3 {
-  font-weight: 600;
+  font-weight: 700;
   color: #d7ecff;
 }
 
 .q-empty {
   color: #b5b7ba;
   padding: 1.5rem 0;
+}
+
+.q-primary-btn {
+  background: #0d6efd !important;
+}
+.q-warn {
+  color: #ffd600;
+  background: rgba(255, 214, 0, 0.08) !important;
+}
+.q-source {
+  margin-left: 0.5rem;
+  color: #00e676;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.q-section-title {
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: #999;
+  margin: 0 0 1rem;
+}
+
+/* ---------- Starting grid as a race-track layout ---------- */
+.q-grid-section {
+  margin-bottom: 2.25rem;
+}
+
+.grid-track {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  perspective: 900px;
+}
+
+/* The asphalt road surface (slight tilt for depth) */
+.grid-road {
+  position: relative;
+  width: min(720px, 94vw);
+  background: linear-gradient(180deg, #232329 0%, #141419 45%, #0c0c10 100%);
+  border-radius: 18px;
+  padding: 1.1rem 1.4rem 1.4rem;
+  transform: rotateX(4deg);
+  transform-origin: top center;
+  box-shadow:
+    inset 0 2px 14px rgba(0, 0, 0, 0.6),
+    0 18px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Kerbs (red/white) on both edges */
+.grid-curb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(
+    180deg,
+    #ff1801 0 12px,
+    #f2f2f2 12px 24px
+  );
+  opacity: 0.85;
+}
+.grid-curb.left { left: -7px; }
+.grid-curb.right { right: -7px; }
+.grid-curb::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,0));
+}
+
+/* Dashed center line */
+.grid-centerline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  transform: translateX(-50%);
+  background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 50%, transparent 50%);
+  background-size: 4px 26px;
+  background-repeat: repeat-y;
+  opacity: 0.7;
+}
+
+.grid-rows-staggered {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+/* One car per row, alternating sides (staggered grid) */
+.grid-stagger {
+  display: flex;
+  min-width: 0;
+}
+.grid-stagger.left {
+  justify-content: flex-start;
+  padding-left: 4%;
+}
+.grid-stagger.right {
+  justify-content: flex-end;
+  padding-right: 4%;
+}
+
+.grid-stagger.front .grid-cell {
+  border-color: rgba(255, 215, 0, 0.45);
+  background: linear-gradient(180deg, rgba(255, 215, 0, 0.14), rgba(255, 215, 0, 0.03));
+}
+.grid-stagger.front .grid-pos {
+  color: #ffd700;
+  text-shadow: 0 0 14px rgba(255, 215, 0, 0.5);
+}
+
+.grid-cell {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 0.6rem 0.9rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(250px, 40vw);
+  min-width: 0;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  backdrop-filter: blur(6px);
+}
+.grid-cell:hover {
+  border-color: rgba(255, 24, 1, 0.5);
+  transform: translateY(-2px);
+}
+
+.grid-pos {
+  font-weight: 900;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  margin-bottom: 0.4rem;
+  color: #d0d2d6;
+}
+
+.grid-photo {
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--tc, #7a7f8a);
+  background: #1a1a20;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5), 0 0 14px color-mix(in srgb, var(--tc, #7a7f8a) 40%, transparent);
+  margin-bottom: 0.35rem;
+}
+.grid-photo-img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  object-fit: cover !important;
+  object-position: top center !important;
+  border-radius: 50%;
+}
+.grid-name {
+  font-weight: 700;
+  font-size: 0.82rem;
+  text-align: center;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.grid-team {
+  font-size: 0.7rem;
+  color: #b5b7ba;
+  text-align: center;
+  margin-top: 0.12rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Start gantry (at the front of the grid) */
+.grid-gantry {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 1rem;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  padding: 0.4rem 1.2rem;
+  box-shadow: 0 0 24px rgba(255, 24, 1, 0.15);
+}
+.gantry-light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ff1801;
+  box-shadow: 0 0 10px rgba(255, 24, 1, 0.9);
+  animation: gantryPulse 2s infinite;
+}
+@keyframes gantryPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.gantry-label {
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #fff;
+}
+
+@media (max-width: 560px) {
+  .grid-road {
+    padding: 0.8rem 0.9rem 1rem;
+    border-radius: 14px;
+  }
+  .grid-rows-staggered {
+    gap: 0.45rem;
+  }
+  .grid-stagger.left {
+    padding-left: 2%;
+  }
+  .grid-stagger.right {
+    padding-right: 2%;
+  }
+  .grid-cell {
+    padding: 0.45rem 0.5rem;
+    border-radius: 11px;
+    width: min(44vw, 180px);
+  }
+  .grid-name {
+    font-size: 0.68rem;
+  }
+  .grid-team {
+    font-size: 0.6rem;
+  }
+  .grid-pos {
+    font-size: 0.78rem;
+  }
+  .grid-curb {
+    width: 8px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -192,7 +535,8 @@
     flex-direction: column;
     align-items: stretch;
   }
-  .q-select {
+  .q-select,
+  .q-control-group select {
     width: 100%;
     min-width: 0;
   }

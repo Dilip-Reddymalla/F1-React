@@ -130,14 +130,17 @@
   font-weight: bold;
 }
 
-.grid-cell {
+.race-grid-td {
   text-align: center;
   font-weight: 700;
   color: #c8c8cc;
 }
-.grid-cell.pole {
+.race-grid-td.pole {
   color: #ffd700;
   text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+.race-grid-th {
+  text-align: center;
 }
 
 .driver-cell strong {
