@@ -35,23 +35,23 @@ export function Driver({ year, setYear }) {
   }
 
   try {
+    // Driver standings list every driver once (with their constructor) —
+    // no pagination truncation like /results.json (which pages at 30 rows).
     const res = await fetch(
-      `https://api.jolpi.ca/ergast/f1/${year}/results.json`
+      `https://api.jolpi.ca/ergast/f1/${year}/driverstandings.json?limit=100`
     );
 
-    if (!res.ok) throw new Error("Failed results fetch");
+    if (!res.ok) throw new Error("Failed standings fetch");
 
-      const data = await res.json();
-      const races = data.MRData?.RaceTable?.Races ?? [];
+    const data = await res.json();
+    const list = data.MRData?.StandingsTable?.StandingsLists?.[0]?.DriverStandings ?? [];
 
-      races.forEach(race => {
-        race.Results.forEach(result => {
-          teamCache.set(
-            `${year}-${result.Driver.driverId}`,
-            result.Constructor.name
-          );
-        });
-      });
+    list.forEach(entry => {
+      const constructorName = entry.Constructors?.[0]?.name;
+      if (constructorName) {
+        teamCache.set(`${year}-${entry.Driver.driverId}`, constructorName);
+      }
+    });
 
     driversArray.forEach(driver => {
       teams[driver.driverId] =
@@ -97,7 +97,9 @@ export function Driver({ year, setYear }) {
       setError(null);
 
       try {
-        const url = `https://api.jolpi.ca/ergast/f1/${year}/drivers.json`;
+        // ?limit=100 — the API defaults to 30 rows and pages alphabetically,
+        // so without it many drivers (e.g. Verstappen) would be missed.
+        const url = `https://api.jolpi.ca/ergast/f1/${year}/drivers.json?limit=100`;
         const driversData = await fectchChachedDrivers(url);
 
         setDrivers(driversData);

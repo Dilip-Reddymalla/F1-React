@@ -597,8 +597,10 @@ section {
   color: #bbb;
 }
 
-/* Driver Cell (Avatar + Name) */
-.driver-cell {
+/* Driver Cell (Avatar + Name) — scoped to post-body tables so it can't leak
+   into other pages' <td class="driver-cell"> (e.g. standings table). */
+.post-body .driver-cell,
+.f1-results-table .driver-cell {
   display: inline-flex;
   align-items: center;
   gap: 0.75rem;

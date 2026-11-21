@@ -4,30 +4,43 @@
   background: rgba(0, 0, 0, 0.5);
   border-radius: 8px;
   padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 .standings-table {
   width: 100%;
-  border-collapse: collapse;
   color: white;
   font-size: 0.9rem;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .standings-table th,
 .standings-table td {
   padding: 1rem;
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 2px solid rgba(255, 255, 255, 0.18);
 }
 
 .standings-table th {
   text-transform: uppercase;
   font-size: 0.8rem;
-  color: #999;
+  color: #fff;
+  border-bottom: 3px solid rgba(225, 6, 0, 0.65);
 }
 
-.standings-table tr:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+.standings-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Zebra striping — rows remain clearly separated even if a hairline is
+   antialiased away at unusual zoom levels. */
+.standings-table tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.standings-table tbody tr:hover {
+  background-color: rgba(225, 6, 0, 0.08);
 }
 
 .pos-cell {
@@ -38,6 +51,10 @@
 
 .standings-table .pos-cell {
   text-align: center;
+}
+
+.standings-table td.driver-cell {
+  display: table-cell; /* guard against the global .driver-cell inline-flex rule */
 }
 
 .driver-cell strong,
