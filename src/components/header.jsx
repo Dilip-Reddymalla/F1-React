@@ -96,6 +96,12 @@ export function Header() {
             Races
           </Link>
           <Link
+            to="/qualifying"
+            className={`nav-link ${location.pathname === "/qualifying" ? "active" : ""}`}
+          >
+            Qualifying
+          </Link>
+          <Link
             to="/standings"
             className={`nav-link ${location.pathname === "/standings" ? "active" : ""}`}
           >
@@ -190,6 +196,14 @@ export function Header() {
             >
               <span className="nav-item-icon">📅</span>
               <span>Races</span>
+            </Link>
+            <Link
+              to="/qualifying"
+              onClick={closeMenu}
+              className={`mobile-nav-link ${location.pathname === "/qualifying" ? "active" : ""}`}
+            >
+              <span className="nav-item-icon">🏁</span>
+              <span>Qualifying</span>
             </Link>
             <Link
               to="/standings"

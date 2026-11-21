@@ -11,6 +11,7 @@ export function ResultsTable({ results, onDriverSelect, selectedDriverIds, onTog
           <tr>
             <th className="select-cell">Select</th>
             <th>Pos</th>
+            <th className="grid-cell">Grid</th>
             <th>Driver</th>
             <th>Constructor</th>
             <th>Laps</th>
@@ -42,6 +43,7 @@ export function ResultsTable({ results, onDriverSelect, selectedDriverIds, onTog
                      </label>
                   </td>
                   <td className="pos-cell">{result.position}</td>
+                  <td className={`grid-cell ${Number(result.grid) === 1 ? "pole" : ""}`} title={Number(result.grid) === 1 ? "Pole position" : "Starting grid position"}>{result.grid}</td>
                   <td className="driver-cell">
                     {/* Flag placeholder if needed */}
                     {result.Driver.givenName} <strong>{result.Driver.familyName}</strong>

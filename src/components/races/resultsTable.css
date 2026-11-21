@@ -130,6 +130,16 @@
   font-weight: bold;
 }
 
+.grid-cell {
+  text-align: center;
+  font-weight: 700;
+  color: #c8c8cc;
+}
+.grid-cell.pole {
+  color: #ffd700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+
 .driver-cell strong {
   margin-left: 4px;
 }
