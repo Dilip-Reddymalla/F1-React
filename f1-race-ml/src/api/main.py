@@ -47,7 +47,10 @@ sys.path.insert(0, str(ROOT))
 from config import (RETRAIN_POLL_SECONDS, DNF_MODEL_FILE, RANKING_MODEL_FILE,  # noqa: E402
                     QUALI_MODEL_FILE, RACE_ENGINE_FILE)
 from src.data.fetch_latest import (get_current_season, next_race, refresh_latest,  # noqa: E402
-                                   find_upcoming_with_qualifying)
+                                   find_upcoming_with_qualifying,
+                                   fetch_actual_starting_grid,
+                                   fetch_qualifying_for_round,
+                                   latest_completed_entries)
 from src.models.dnf.predict_dnf import run_prediction                            # noqa: E402
 from src.models.ranking.predict_ranking import (run_prediction as run_engine_prediction,  # noqa: E402
                                                 run_engine_post_qualifying,
@@ -191,6 +194,16 @@ class PredictRequest(BaseModel):
     refresh: bool = False
 
 
+class GridOverrideRequest(BaseModel):
+    """Optional post-penalty starting grid, keyed by driverId or driver name.
+
+    Example:
+        {"grids": {"norris": 1, "max verstappen": 2}}
+    Drivers not listed keep their qualifying position as the starting grid.
+    """
+    grids: dict[str, int] | None = None
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "service": "f1-dnf-prediction", "models_ready": models_ready()}
@@ -332,9 +345,13 @@ def predict_quali_endpoint(season: int | None = None, round: int | None = None):
 
 
 @app.post("/predict/quali/upcoming")
-def predict_quali_upcoming_endpoint():
-    """Update prediction for the UPCOMING race using its real qualifying grid."""
-    return run_quali_prediction_upcoming()
+def predict_quali_upcoming_endpoint(req: GridOverrideRequest | None = None):
+    """Update prediction for the UPCOMING race using its real qualifying grid.
+
+    Optional body {"grids": {...}} applies post-penalty starting positions.
+    """
+    grids = (req.grids if req else None)
+    return run_quali_prediction_upcoming(grid_overrides=grids)
 
 
 @app.post("/predict/engine/quali")
@@ -350,9 +367,60 @@ def predict_engine_pre_quali_endpoint():
 
 
 @app.post("/predict/engine/post-quali")
-def predict_engine_post_quali_endpoint():
-    """Full race engine for the next race — forced post-qualifying (real grid)."""
-    return run_engine_post_qualifying()
+def predict_engine_post_quali_endpoint(req: GridOverrideRequest | None = None):
+    """Full race engine for the next race — forced post-qualifying (real grid).
+
+    Optional body {"grids": {...}} applies post-penalty starting positions.
+    """
+    grids = (req.grids if req else None)
+    return run_engine_post_qualifying(grid_overrides=grids)
+
+
+@app.get("/grid")
+def grid_endpoint(season: int | None = None, round: int | None = None):
+    """Actual starting grid (post-penalty) for a round.
+
+    Source: OpenF1 (includes penalties). Falls back to Jolpica qualifying
+    positions when the real grid is not published yet.
+    Returns {"race":…, "grid": [{position, driver, constructor, driver_id}]}.
+    """
+    if season is None:
+        season, _ = get_current_season()
+
+    race, entries = fetch_actual_starting_grid(season=season, round_no=round)
+    if entries is None:
+        # fallback: qualifying positions for that round
+        q = fetch_qualifying_for_round(season, round)
+        if q is None or not q["entries"]:
+            raise HTTPException(status_code=404, detail="No grid data for this round.")
+        entries = q["entries"]
+        race = {"season": season, "round": round,
+                "race": q["race_info"]["raceName"],
+                "date": q["race_info"]["date"],
+                "circuit": q["race_info"]["Circuit"]["circuitName"]}
+
+    # merge constructor/driver_id from base entries when available
+    base, _ = latest_completed_entries(season) if race else ([], None)
+    base_by_name = {e["driver"].strip().lower(): e for e in base}
+    grid_rows = []
+    for e in sorted(entries, key=lambda x: x["grid"]):
+        b = base_by_name.get(e["driver"].strip().lower(), {})
+        grid_rows.append({
+            "position": int(e["grid"]),
+            "driver": e["driver"],
+            "constructor": b.get("constructor", "") or e.get("constructor", ""),
+            "driver_id": b.get("driver_id", "") or e.get("driver_id", ""),
+        })
+
+    return {
+        "season": race.get("season"),
+        "round": race.get("round"),
+        "race": race.get("race"),
+        "date": race.get("date"),
+        "circuit": race.get("circuit"),
+        "source": "openf1-actual-grid",
+        "grid": grid_rows,
+    }
 
 
 @app.get("/compare/recent")

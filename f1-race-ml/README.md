@@ -163,6 +163,19 @@ Winner Brier ≈ 0.037 means the simulated win probabilities are well-calibrated
 
 ---
 
+## Starting grid source (post-penalty)
+
+- The API fetches the **actual starting grid** from **OpenF1**
+  (`api.openf1.org/v1/starting_grid`), which is published shortly after
+  qualifying and includes grid penalties (e.g. a driver who qualifies P1 but
+  starts P6).
+- Priority: OpenF1 actual grid → Jolpica qualifying positions → imputed
+  pre-qualifying grid.
+- Manual override: `POST /predict/engine/post-quali` accepts
+  `{"grids": {"<driverId or name>": <grid>}}`.
+
+---
+
 ## Leakage rules (still the #1 rule)
 
 Every feature uses only races **before** the one being predicted (`shift(1)`).

@@ -38,7 +38,8 @@ from config import (DNF_DATASET_CSV, RACE_RESULTS_CSV, DNF_MODEL_FILE,  # noqa: 
                     RANKING_MODEL_FILE, RACE_ENGINE_FILE)
 from src.data.fetch_latest import (get_current_season, next_race,           # noqa: E402
                                    latest_completed_entries,
-                                   find_upcoming_with_qualifying)
+                                   find_upcoming_with_qualifying,
+                                   fetch_actual_starting_grid)
 from src.features.build_features import (compute_features,                 # noqa: E402
                                          FEATURE_COLUMNS, RANKING_FEATURES)
 from src.simulation.race_simulator import monte_carlo, summarize_engine    # noqa: E402
@@ -155,12 +156,39 @@ def run_prediction(refresh=False, entries_with_grid=None, stage_hint=None,
     return result
 
 
-def run_engine_post_qualifying():
-    """Run the full engine for the upcoming race using REAL grid from qualifying."""
+def apply_grid_overrides(entries, grid_overrides):
+    """Apply known starting-grid values (post-penalty) onto qualifying entries.
+
+    grid_overrides: mapping keyed by driverId OR full driver name -> final grid.
+    Entries not mentioned keep their qualifying position as grid.
+    """
+    if not grid_overrides:
+        return entries
+    norm = {}
+    for k, v in (grid_overrides or {}).items():
+        key = str(k).strip().lower()
+        norm[key] = int(v)
+    out = []
+    for e in entries:
+        g = norm.get(e["driver_id"].lower())
+        if g is None:
+            g = norm.get(e["driver"].lower())
+        if g is not None:
+            e = {**e, "grid": g}
+        out.append(e)
+    return out
+
+
+def run_engine_post_qualifying(grid_overrides=None):
+    """Run the full engine for the upcoming race using REAL grid from qualifying.
+
+    grid_overrides: optional {driverId | driver name: grid} for post-penalty
+    starting positions; drivers not listed keep their qualifying position.
+    """
     race, quali = find_upcoming_with_qualifying()
     if race is None or quali is None:
         raise RuntimeError("No qualifying data available for the upcoming race.")
-    entries = quali["entries"]
+    entries = apply_grid_overrides(quali["entries"], grid_overrides)
     race = dict(race)
     race["race"] = quali["race_info"]["raceName"]
     race["circuit"] = quali["race_info"]["Circuit"]["circuitName"]
@@ -175,16 +203,62 @@ def run_engine_post_qualifying():
 def run_prediction_auto():
     """Run the engine for the next race, auto-selecting the prediction stage.
 
-    - If qualifying has already happened for the target race (a race weekend is
-      underway), use the REAL grid (post-qualifying).
-    - Otherwise, fall back to the pre-qualifying prediction (imputed grid).
+    Source priority:
+      1. OpenF1 ACTUAL starting grid (post-penalty) — most accurate.
+      2. Jolpica qualifying positions (fallback when grid not published).
+      3. Pre-qualifying prediction (imputed grid).
 
     This is the behaviour of the main /predict/engine endpoint.
     """
+    # 1. Actual starting grid from OpenF1 (includes penalties).
+    race, grid_entries = fetch_actual_starting_grid()
+    if race is not None and grid_entries:
+        base_entries, last_race = latest_completed_entries(race["season"])
+        merged = merge_base_with_grid(base_entries, grid_entries)
+        return run_prediction(
+            entries_with_grid=merged,
+            stage_hint="post-qualifying (actual starting grid · OpenF1)",
+            race_override=race,
+        )
+
+    # 2. Fallback: Jolpica qualifying positions.
     race, quali = find_upcoming_with_qualifying()
     if race is not None and quali is not None:
         return run_engine_post_qualifying()
+
+    # 3. Pre-qualifying (no quali data yet).
     return run_prediction()
+
+
+def merge_base_with_grid(base_entries, grid_entries):
+    """Merge OpenF1 actual-grid entries into our base entry list.
+
+    Base entries carry driver_id/constructor (needed for features); the grid
+    list supplies the post-penalty starting positions. Unknown grid drivers
+    (e.g. a new entrant) are appended with an empty constructor.
+    """
+    norm = lambda s: (s or "").strip().lower()
+    grid_by_name = {norm(e["driver"]): e["grid"] for e in grid_entries}
+    merged = []
+    seen = set()
+    for e in base_entries:
+        g = grid_by_name.get(norm(e["driver"]))
+        seen.add(norm(e["driver"]))
+        merged.append({
+            "driver": e["driver"],
+            "driver_id": e.get("driver_id", ""),
+            "constructor": e.get("constructor", ""),
+            "grid": g if g is not None else np.nan,
+        })
+    for e in grid_entries:
+        if norm(e["driver"]) not in seen:
+            merged.append({
+                "driver": e["driver"],
+                "driver_id": "",
+                "constructor": "",
+                "grid": e["grid"],
+            })
+    return merged
 
 
 def print_result(result):

@@ -36,6 +36,11 @@ from src.features.build_features import build_feature_file                # noqa
 
 SESSION = requests.Session()
 
+# OpenF1: free API (no key) that exposes the ACTUAL starting grid
+# (post-penalty) for an upcoming race after qualifying is published.
+# Docs: https://openf1.org/docs
+OPENF1_BASE = "https://api.openf1.org/v1"
+
 
 # ---------------------------------------------------------------------------
 # Low-level API helpers
@@ -146,6 +151,114 @@ def find_upcoming_with_qualifying():
         if q and q["entries"]:
             return {**r, "season": season}, q
     return None, None
+
+
+# ---------------------------------------------------------------------------
+# OpenF1 actual starting grid (post-penalty)
+# ---------------------------------------------------------------------------
+def openf1_get(url):
+    """GET an OpenF1 URL with the same retry handling as Jolpica."""
+    for attempt in range(5):
+        try:
+            response = SESSION.get(url, timeout=30)
+            if response.status_code == 429:
+                print("OpenF1 rate limited. Waiting 20 seconds...")
+                time.sleep(20)
+                continue
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"OpenF1 request failed (attempt {attempt + 1}/5): {e}")
+            time.sleep(5)
+    raise RuntimeError(f"Failed after 5 attempts: {url}")
+
+
+_OPENF1_GRID_CACHE = {"key": None, "at": 0.0, "result": None}
+_OPENF1_GRID_TTL = 600.0  # seconds; avoid rate limits (free tier: 30 req/min)
+
+
+def fetch_actual_starting_grid(season=None, races=None, round_no=None):
+    """Return (race, entries) using OpenF1's ACTUAL starting grid.
+
+    OpenF1 publishes the real grid (qualifying + penalties) shortly after
+    qualifying ends. `entries` = [{"driver", "grid"}, ...] ordered by grid.
+
+    Returns (None, None) if not available yet. Result is cached briefly.
+
+    round_no: optional round to fetch for (defaults to the next upcoming race).
+    """
+    import time as _time
+    try:
+        if races is None:
+            season, races = get_current_season()
+        if round_no is not None:
+            nr = next((r for r in races if r["round"] == round_no), None)
+            if nr is not None:
+                nr = {**nr, "season": season}
+        else:
+            nr = next_race(season, races)
+        if nr is None:
+            return None, None
+
+        # Serve from cache if fresh (keyed by season/round).
+        cache_key = (season, nr["round"])
+        now = _time.time()
+        if (_OPENF1_GRID_CACHE["key"] == cache_key
+                and now - _OPENF1_GRID_CACHE["at"] < _OPENF1_GRID_TTL):
+            return _OPENF1_GRID_CACHE["result"]
+
+        def _store(result):
+            _OPENF1_GRID_CACHE["key"] = cache_key
+            _OPENF1_GRID_CACHE["at"] = now
+            _OPENF1_GRID_CACHE["result"] = result
+            return result
+
+        race_date = nr["date"][:10]
+
+        # Find this race's session (matched by date).
+        sessions = openf1_get(f"{OPENF1_BASE}/sessions?year={season}&session_type=Race")
+        race_session = next(
+            (s for s in sessions if (s.get("date_start") or "")[:10] == race_date),
+            None,
+        )
+        if race_session is None:
+            return _store((None, None))
+        meeting_key = race_session.get("meeting_key")
+
+        # Qualifying session for the same meeting.
+        msessions = openf1_get(f"{OPENF1_BASE}/sessions?meeting_key={meeting_key}")
+        quali = next(
+            (s for s in msessions if s.get("session_type") == "Qualifying"), None
+        )
+        if quali is None:
+            return _store((None, None))
+        quali_key = quali.get("session_key")
+
+        grid = openf1_get(
+            f"{OPENF1_BASE}/starting_grid?session_key={quali_key}"
+        )
+        if not isinstance(grid, list) or not grid:
+            return _store((None, None))
+
+        drivers = openf1_get(
+            f"{OPENF1_BASE}/drivers?session_key={quali_key}"
+        )
+        name_by_number = {d.get("driver_number"): d.get("full_name") for d in drivers}
+
+        entries = [
+            {
+                "driver": name_by_number.get(r.get("driver_number"),
+                                             str(r.get("driver_number"))),
+                "grid": int(r["position"]),
+            }
+            for r in grid
+            if r.get("position") is not None
+        ]
+        entries.sort(key=lambda e: e["grid"])
+        return _store((nr, entries))
+    except Exception as exc:  # noqa: BLE001
+        print(f"[openf1] starting grid fetch failed: {exc}")
+        return None, None
 
 
 # ---------------------------------------------------------------------------
