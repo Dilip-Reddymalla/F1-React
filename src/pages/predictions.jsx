@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Header } from "../components/header";
 import { DriverImage } from "../components/driverImage";
-import { fetchRaceEngine, fetchRecentComparison } from "../services/predictions";
+import {
+  fetchRaceEngine,
+  fetchRecentComparison,
+  startRetrain,
+  getRetrainStatus,
+} from "../services/predictions";
 import "./predictions.css";
 
 const pct = (x) => `${(x * 100).toFixed(1)}%`;
@@ -70,8 +75,8 @@ function Hero({ engine, source }) {
         </div>
         <div className="pred-badges">
           <span className="pred-badge stage"><span className="dot" />{engine.stage || "pre-qualifying"}</span>
-          <span className={`pred-badge ${source === "live" ? "live" : "snapshot"}`}>
-            <span className="dot" />{source === "live" ? "Live model" : "Static snapshot"}
+          <span className={`pred-badge ${source === "live" || source === "mongo" ? "live" : "snapshot"}`}>
+            <span className="dot" />{source === "live" ? "Live model" : source === "mongo" ? "Mongo cache" : "Static snapshot"}
           </span>
           <span className="pred-badge">{engine.engine || "Monte Carlo"}</span>
         </div>
@@ -107,6 +112,80 @@ function ModeSelector({ mode, onChange }) {
           {m.label}
         </button>
       ))}
+    </div>
+  );
+}
+
+function RetrainControl({ onDone }) {
+  const [state, setState] = useState("idle"); // idle | running | done | error
+  const [message, setMessage] = useState("");
+  const pollRef = useRef(null);
+
+  const stopPolling = () => {
+    if (pollRef.current) {
+      clearInterval(pollRef.current);
+      pollRef.current = null;
+    }
+  };
+
+  const handleRetrain = async () => {
+    if (state === "running") return;
+    setState("running");
+    setMessage("Starting retrain...");
+    try {
+      await startRetrain(true);
+    } catch (err) {
+      setState("error");
+      setMessage(`Could not start retrain: ${err.message}`);
+      return;
+    }
+
+    const poll = async () => {
+      try {
+        const status = await getRetrainStatus();
+        if (status.running) {
+          setMessage("Retraining with the latest data — this can take a few minutes…");
+          return;
+        }
+        stopPolling();
+        if (status.error) {
+          setState("error");
+          setMessage(`Retrain failed: ${status.error}`);
+        } else {
+          const t = status.result?.trained_through;
+          const trainedAt = status.result?.trained_at;
+          setState("done");
+          setMessage(
+            t
+              ? `Models retrained through ${t.season} round ${t.round} (${trainedAt ? new Date(trainedAt).toLocaleString() : ""})`
+              : "Retrain completed."
+          );
+        }
+        onDone?.();
+      } catch {
+        // transient — keep polling
+      }
+    };
+
+    await poll();
+    pollRef.current = setInterval(poll, 5000);
+  };
+
+  useEffect(() => () => stopPolling(), []);
+
+  return (
+    <div className="retrain-wrap">
+      <button
+        type="button"
+        className={`retrain-btn ${state === "running" ? "running" : ""}`}
+        onClick={handleRetrain}
+        disabled={state === "running"}
+      >
+        {state === "running" ? "⟳ Retraining…" : "⭮ Retrain Models"}
+      </button>
+      {message && (
+        <span className={`retrain-status ${state}`}>{message}</span>
+      )}
     </div>
   );
 }
@@ -437,7 +516,10 @@ export default function Predictions() {
     <>
       <Header />
       <main className="predictions-page" ref={mainRef}>
-        <ModeSelector mode={mode} onChange={setMode} />
+        <div className="pred-toolbar">
+          <ModeSelector mode={mode} onChange={setMode} />
+          <RetrainControl onDone={() => loadData(mode)} />
+        </div>
 
         {loading && <div className="pred-state">Loading…</div>}
         {error && <div className="pred-state">Error: {error}</div>}

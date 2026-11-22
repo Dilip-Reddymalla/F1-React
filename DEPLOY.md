@@ -89,6 +89,24 @@ race (round 20 = Brazilian GP today). No manual data wiring needed.
 
 ---
 
+## Prediction caching (MongoDB-first)
+
+Completed predictions (pre-quali, post-quali, comparisons) are stored in the
+same MongoDB used by the site, in the `prediction_records` collection.
+
+- The frontend first asks the Node endpoint `/api/predictions` (fast, served by
+  Vercel/Vite). If a **fresh** record exists it renders instantly.
+- On a miss/stale record, the frontend falls back to the Python backend, which
+  computes and stores the fresh record (the next load is instant).
+- Freshness = the model's `data_round` equals the latest completed F1 round.
+  After `POST /retrain` (fetch) completes, stored predictions refresh.
+- Retraining runs as a **background job**: `POST /retrain` returns immediately,
+  and `GET /retrain/status` reports progress (the site has a Retrain button
+  that polls this).
+- Requires `MONGODB_URI` on the Python API host (same URI as the site).
+
+---
+
 ## Model retraining after each race
 
 The API includes a background scheduler that detects newly completed races and

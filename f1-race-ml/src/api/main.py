@@ -23,6 +23,7 @@ import json
 import os
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 
 from contextlib import asynccontextmanager
@@ -57,8 +58,9 @@ from src.models.ranking.predict_ranking import (run_prediction as run_engine_pre
                                                 run_prediction_auto)
 from src.models.quali.predict_quali import (run_quali_prediction,               # noqa: E402
                                             run_quali_prediction_upcoming)
-from src.models.retrain import retrain_all, needs_retrain                       # noqa: E402
+from src.models.retrain import retrain_all, needs_retrain, _latest_completed_key  # noqa: E402
 from src.evaluation.engine_eval import compare_recent_races                    # noqa: E402
+from src.api.prediction_store import _store as mongo_store                     # noqa: E402
 
 def _refresh_engine_cache():
     """Compute the engine result (auto pre/post-qualifying) and cache it."""
@@ -69,6 +71,34 @@ def _refresh_engine_cache():
     _engine_cache["key"] = key
     _engine_cache["result"] = result
     return result
+
+
+def _data_round():
+    """Latest race round the models were trained through (for staleness)."""
+    try:
+        season, rnd = _latest_completed_key()
+        return rnd
+    except Exception:
+        return 0
+
+
+def _engine_from_mongo(season, round_, stage):
+    """Try to read a stored engine result from MongoDB."""
+    result = mongo_store.get(season, round_, stage, data_round=_data_round())
+    if result is not None:
+        return result
+    return None
+
+
+def _engine_into_mongo(result):
+    """Persist a computed engine result into MongoDB (best-effort)."""
+    try:
+        season = int(result.get("season"))
+        round_ = int(result.get("round"))
+        stage = result.get("stage", "engine")
+        mongo_store.put(season, round_, stage, data_round=_data_round(), payload=result)
+    except Exception as exc:  # noqa: BLE001
+        print(f"[mongo] store engine failed: {exc}")
 
 
 def _load_engine_from_disk():
@@ -194,6 +224,64 @@ class PredictRequest(BaseModel):
     refresh: bool = False
 
 
+# ── Retrain background job ─────────────────────────────────────────────────
+# Retraining can take minutes; we run it in a background thread and expose a
+# status endpoint so the frontend can poll instead of holding a request open.
+_retrain_job = {
+    "running": False,
+    "started_at": None,
+    "finished_at": None,
+    "result": None,
+    "error": None,
+}
+_retrain_lock = threading.Lock()
+
+
+def _retrain_worker(fetch):
+    def _run():
+        try:
+            result = retrain_all(fetch=fetch)
+            with _retrain_lock:
+                _retrain_job["result"] = result
+                _retrain_job["error"] = None
+        except Exception as exc:  # noqa: BLE001
+            with _retrain_lock:
+                _retrain_job["error"] = str(exc)
+                _retrain_job["result"] = None
+        finally:
+            with _retrain_lock:
+                _retrain_job["running"] = False
+                _retrain_job["finished_at"] = datetime.now(timezone.utc).isoformat()
+            _invalidate_engine_cache()
+    return _run
+
+
+def _start_retrain_job(fetch=True):
+    with _retrain_lock:
+        if _retrain_job["running"]:
+            return {"started": False, "running": True}
+        _retrain_job.update({
+            "running": True,
+            "started_at": datetime.now(timezone.utc).isoformat(),
+            "finished_at": None,
+            "result": None,
+            "error": None,
+        })
+    threading.Thread(target=_retrain_worker(fetch), daemon=True).start()
+    return {"started": True, "running": True}
+
+
+def _retrain_status():
+    with _retrain_lock:
+        return {
+            "running": _retrain_job["running"],
+            "started_at": _retrain_job["started_at"],
+            "finished_at": _retrain_job["finished_at"],
+            "result": _retrain_job["result"],
+            "error": _retrain_job["error"],
+        }
+
+
 class GridOverrideRequest(BaseModel):
     """Optional post-penalty starting grid, keyed by driverId or driver name.
 
@@ -206,7 +294,12 @@ class GridOverrideRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "service": "f1-dnf-prediction", "models_ready": models_ready()}
+    return {
+        "status": "ok",
+        "service": "f1-dnf-prediction",
+        "models_ready": models_ready(),
+        "prediction_store": mongo_store.status(),
+    }
 
 
 _HOME_HTML = """<!doctype html>
@@ -266,7 +359,8 @@ _HOME_HTML = """<!doctype html>
       <tr><td>POST</td><td><code>/predict</code></td><td>DNF probabilities for next race</td></tr>
       <tr><td>POST</td><td><code>/predict/quali/upcoming</code></td><td>Post-quali finishing order (real grid)</td></tr>
       <tr><td>GET</td><td><code>/compare/recent?races=6</code></td><td>Predicted vs actual for recent races</td></tr>
-      <tr><td>POST</td><td><code>/retrain</code></td><td>Refit all models</td></tr>
+      <tr><td>POST</td><td><code>/retrain</code></td><td>Start background retrain (returns immediately)</td></tr>
+      <tr><td>GET</td><td><code>/retrain/status</code></td><td>Poll retrain job status</td></tr>
       <tr><td>POST</td><td><code>/refresh</code></td><td>Fetch latest data (+ retrain if new race)</td></tr>
     </tbody>
   </table>
@@ -307,10 +401,17 @@ def refresh_endpoint():
 
 @app.post("/retrain")
 def retrain_endpoint(req: RetrainRequest):
-    """Force refit all models on the current data (optionally fetch first)."""
-    summary = retrain_all(fetch=req.fetch)
-    _invalidate_engine_cache()
-    return summary
+    """Start a background retrain job (fetch latest data by default).
+
+    Returns immediately; poll GET /retrain/status for progress.
+    """
+    return _start_retrain_job(fetch=req.fetch)
+
+
+@app.get("/retrain/status")
+def retrain_status_endpoint():
+    """Current status of the background retrain job."""
+    return _retrain_status()
 
 
 @app.post("/predict")
@@ -323,8 +424,8 @@ def predict_endpoint(req: PredictRequest):
 def predict_engine_endpoint():
     """Unified engine prediction (DNF + ranking -> Monte Carlo) for next race.
 
-    Cached by upcoming race so the heavy first compute is only done once
-    (it is also pre-warmed at startup).
+    Served from MongoDB when a stored record exists for the current
+    (season, round, stage); otherwise computed and persisted.
     """
     if not models_ready():
         raise HTTPException(
@@ -335,7 +436,16 @@ def predict_engine_endpoint():
     key = _current_engine_key()
     if key and _engine_cache["key"] == key and _engine_cache["result"] is not None:
         return _engine_cache["result"]
-    return _refresh_engine_cache()
+    if key:
+        season, round_, stage = key
+        stored = _engine_from_mongo(season, round_, stage)
+        if stored is not None:
+            _engine_cache["key"] = key
+            _engine_cache["result"] = stored
+            return stored
+    result = _refresh_engine_cache()
+    _engine_into_mongo(result)
+    return result
 
 
 @app.post("/predict/quali")
@@ -363,7 +473,16 @@ def predict_engine_quali_endpoint():
 @app.post("/predict/engine/pre-quali")
 def predict_engine_pre_quali_endpoint():
     """Full race engine for the next race — forced pre-qualifying (imputed grid)."""
-    return run_engine_prediction(stage_hint="pre-qualifying (grid imputed)")
+    season, races = get_current_season()
+    nr = next_race(season, races)
+    if nr is None:
+        raise HTTPException(status_code=404, detail="No upcoming race found.")
+    result = _engine_from_mongo(nr["season"], nr["round"], "pre-qualifying (grid imputed)")
+    if result is not None:
+        return result
+    result = run_engine_prediction(stage_hint="pre-qualifying (grid imputed)")
+    _engine_into_mongo(result)
+    return result
 
 
 @app.post("/predict/engine/post-quali")
@@ -373,7 +492,9 @@ def predict_engine_post_quali_endpoint(req: GridOverrideRequest | None = None):
     Optional body {"grids": {...}} applies post-penalty starting positions.
     """
     grids = (req.grids if req else None)
-    return run_engine_post_qualifying(grid_overrides=grids)
+    result = run_engine_post_qualifying(grid_overrides=grids)
+    _engine_into_mongo(result)
+    return result
 
 
 @app.get("/grid")
@@ -428,11 +549,24 @@ def compare_recent_endpoint(races: int = 6):
     """Predicted vs actual results for the most recent completed races.
 
     Cached (training is the expensive part) so repeat requests are instant.
+    Also persisted to MongoDB, keyed by the latest trained round so it only
+    recomputes when new race data arrives.
     """
     key = ("recent", races)
     if _compare_cache["key"] == key and _compare_cache["result"] is not None:
         return _compare_cache["result"]
+
+    data_round = _data_round()
+    season, _ = get_current_season()
+    stored = mongo_store.get(season, data_round, f"compare:{races}", data_round=data_round)
+    if stored is not None:
+        _compare_cache["key"] = key
+        _compare_cache["result"] = stored
+        return stored
+
     result = compare_recent_races(k=races)
+    mongo_store.put(season, data_round, f"compare:{races}",
+                    data_round=data_round, payload=result)
     _compare_cache["key"] = key
     _compare_cache["result"] = result
     return result

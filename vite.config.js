@@ -92,6 +92,34 @@ function localApiPostsPlugin() {
         next();
       });
 
+      server.middlewares.use("/api/predictions", async (req, res, next) => {
+        if (req.method && req.method !== "GET") {
+          next();
+          return;
+        }
+        if (!res.status) {
+          res.status = (code) => {
+            res.statusCode = code;
+            return res;
+          };
+        }
+        if (!res.json) {
+          res.json = (payload) => {
+            res.setHeader("Content-Type", "application/json; charset=utf-8");
+            res.end(JSON.stringify(payload));
+            return res;
+          };
+        }
+        try {
+          const { default: predictionsHandler } = await import("./api/predictions.js");
+          await predictionsHandler(req, res);
+        } catch (error) {
+          console.warn("Local predictions handler failed:", error?.message);
+          res.statusCode = 404;
+          res.end(JSON.stringify({ cached: false }));
+        }
+      });
+
       server.middlewares.use("/api/posts", async (req, res, next) => {
         if (req.method && req.method !== "GET") {
           next();
