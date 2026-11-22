@@ -47,9 +47,18 @@ class PredictionStore:
             self._client = MongoClient(self._uri, serverSelectionTimeoutMS=3000)
             db = self._client.get_default_database()
             self._coll = db[COLLECTION]
-            # Ensure unique key so upserts are atomic.
+            # Drop any legacy unique index on the wrong field (key) — it made
+            # the second insert fail with E11000 (all docs shared key: null).
+            try:
+                self._coll.drop_index("prediction_key_unique")
+            except Exception:
+                pass
+            # Unique lookup key = (season, round, stage); _id remains the
+            # composite string used for atomic upserts.
             self._coll.create_index(
-                [("key", 1)], unique=True, name="prediction_key_unique"
+                [("season", 1), ("round", 1), ("stage", 1)],
+                unique=True,
+                name="prediction_lookup_unique",
             )
             self._connected_at = now
             self._last_error = None

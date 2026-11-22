@@ -237,6 +237,48 @@ _retrain_job = {
 _retrain_lock = threading.Lock()
 
 
+def _prewarm_prediction_records():
+    """After retraining, pre-compute and store fresh prediction records so the
+    frontend's MongoDB fast path serves them instantly.
+
+    - Compare (last 6 races): ~24s cold compute -> pre-warmed.
+    - Engine pre-qualifying for the next race -> pre-warmed.
+    - Engine post-qualifying: best-effort (may skip if grid unavailable).
+    """
+    try:
+        data_round = _data_round()
+        season, _ = get_current_season()
+
+        # Compare
+        try:
+            compare = compare_recent_races(k=6)
+            mongo_store.put(season, data_round, "compare:6",
+                            data_round=data_round, payload=compare)
+            print("[prewarm] compare:6 stored")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[prewarm] compare failed: {exc}")
+
+        # Engine pre-quali (next race)
+        try:
+            nr = next_race(season)
+            if nr is not None:
+                engine = run_engine_prediction(stage_hint="pre-qualifying (grid imputed)")
+                _engine_into_mongo(engine)
+                print("[prewarm] engine pre-quali stored")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[prewarm] engine pre-quali failed: {exc}")
+
+        # Engine post-quali (best-effort)
+        try:
+            engine_post = run_engine_post_qualifying()
+            _engine_into_mongo(engine_post)
+            print("[prewarm] engine post-quali stored")
+        except Exception as exc:  # noqa: BLE001
+            print(f"[prewarm] engine post-quali skipped: {exc}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[prewarm] failed: {exc}")
+
+
 def _retrain_worker(fetch):
     def _run():
         try:
@@ -244,6 +286,7 @@ def _retrain_worker(fetch):
             with _retrain_lock:
                 _retrain_job["result"] = result
                 _retrain_job["error"] = None
+            _prewarm_prediction_records()
         except Exception as exc:  # noqa: BLE001
             with _retrain_lock:
                 _retrain_job["error"] = str(exc)

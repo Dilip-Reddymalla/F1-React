@@ -3875,25 +3875,47 @@ season,round,race,date,circuit,driver,driver_id,constructor,grid,finish_position
 2026,19,Mexico City Grand Prix,2026-11-01,Autódromo Hermanos Rodríguez,Valtteri Bottas,bottas,Cadillac F1 Team,21,20,Retired,0.0
 2026,19,Mexico City Grand Prix,2026-11-01,Autódromo Hermanos Rodríguez,Lance Stroll,stroll,Aston Martin,19,21,Retired,0.0
 2026,19,Mexico City Grand Prix,2026-11-01,Autódromo Hermanos Rodríguez,Fernando Alonso,alonso,Aston Martin,17,22,Retired,0.0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Lando Norris,norris,McLaren,1,1,Finished,25
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Max Verstappen,max_verstappen,Red Bull,21,2,Finished,18
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Isack Hadjar,hadjar,Red Bull,5,3,Finished,15
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,George Russell,russell,Mercedes,7,4,Finished,12
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Andrea Kimi Antonelli,antonelli,Mercedes,2,5,Finished,10
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Oscar Piastri,piastri,McLaren,10,6,Finished,8
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Liam Lawson,lawson,RB F1 Team,3,7,Finished,6
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Charles Leclerc,leclerc,Ferrari,14,8,Finished,4
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Lewis Hamilton,hamilton,Ferrari,20,9,Lapped,2
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Nico Hülkenberg,hulkenberg,Audi,4,10,Lapped,1
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Arvid Lindblad,arvid_lindblad,RB F1 Team,18,11,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Fernando Alonso,alonso,Aston Martin,8,12,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Franco Colapinto,colapinto,Alpine F1 Team,13,13,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Pierre Gasly,gasly,Alpine F1 Team,15,14,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Alexander Albon,albon,Williams,9,15,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Gabriel Bortoleto,bortoleto,Audi,19,16,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Oliver Bearman,bearman,Haas F1 Team,6,17,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Sergio Pérez,perez,Cadillac F1 Team,22,18,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Carlos Sainz,sainz,Williams,12,19,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Rafael Camara,rafael_camara,Haas F1 Team,11,20,Lapped,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Lance Stroll,stroll,Aston Martin,16,21,Retired,0
-2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Valtteri Bottas,bottas,Cadillac F1 Team,17,22,Did not start,0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Lando Norris,norris,McLaren,1,1,Finished,25.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Max Verstappen,max_verstappen,Red Bull,21,2,Finished,18.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Isack Hadjar,hadjar,Red Bull,5,3,Finished,15.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,George Russell,russell,Mercedes,7,4,Finished,12.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Andrea Kimi Antonelli,antonelli,Mercedes,2,5,Finished,10.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Oscar Piastri,piastri,McLaren,10,6,Finished,8.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Liam Lawson,lawson,RB F1 Team,3,7,Finished,6.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Charles Leclerc,leclerc,Ferrari,14,8,Finished,4.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Lewis Hamilton,hamilton,Ferrari,20,9,Lapped,2.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Nico Hülkenberg,hulkenberg,Audi,4,10,Lapped,1.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Arvid Lindblad,arvid_lindblad,RB F1 Team,18,11,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Fernando Alonso,alonso,Aston Martin,8,12,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Franco Colapinto,colapinto,Alpine F1 Team,13,13,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Pierre Gasly,gasly,Alpine F1 Team,15,14,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Alexander Albon,albon,Williams,9,15,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Gabriel Bortoleto,bortoleto,Audi,19,16,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Oliver Bearman,bearman,Haas F1 Team,6,17,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Sergio Pérez,perez,Cadillac F1 Team,22,18,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Carlos Sainz,sainz,Williams,12,19,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Rafael Camara,rafael_camara,Haas F1 Team,11,20,Lapped,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Lance Stroll,stroll,Aston Martin,16,21,Retired,0.0
+2026,20,Brazilian Grand Prix,2026-11-08,Autódromo José Carlos Pace,Valtteri Bottas,bottas,Cadillac F1 Team,17,22,Did not start,0.0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Max Verstappen,max_verstappen,Red Bull,1,1,Finished,25
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Lando Norris,norris,McLaren,3,2,Finished,18
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Oscar Piastri,piastri,McLaren,17,3,Finished,15
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Andrea Kimi Antonelli,antonelli,Mercedes,6,4,Finished,12
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Pierre Gasly,gasly,Alpine F1 Team,8,5,Finished,10
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Franco Colapinto,colapinto,Alpine F1 Team,9,6,Finished,8
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Lewis Hamilton,hamilton,Ferrari,11,7,Finished,6
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Carlos Sainz,sainz,Williams,20,8,Finished,4
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,George Russell,russell,Mercedes,2,9,Finished,2
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Charles Leclerc,leclerc,Ferrari,10,10,Finished,1
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Nico Hülkenberg,hulkenberg,Audi,12,11,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Gabriel Bortoleto,bortoleto,Audi,13,12,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Oliver Bearman,bearman,Haas F1 Team,22,13,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Liam Lawson,lawson,RB F1 Team,7,14,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Isack Hadjar,hadjar,Red Bull,4,15,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Rafael Camara,rafael_camara,Haas F1 Team,15,16,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Lance Stroll,stroll,Aston Martin,21,17,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Valtteri Bottas,bottas,Cadillac F1 Team,19,18,Finished,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Fernando Alonso,alonso,Aston Martin,18,19,Retired,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Arvid Lindblad,arvid_lindblad,RB F1 Team,5,20,Retired,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Sergio Pérez,perez,Cadillac F1 Team,16,21,Retired,0
+2026,21,Las Vegas Grand Prix,2026-11-22,Las Vegas Strip Street Circuit,Alexander Albon,albon,Williams,14,22,Did not start,0
